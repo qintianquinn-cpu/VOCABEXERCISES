@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSE 3A 词汇打字练习 - Qwerty Style</title>
+    <style>
+        :root {
+            --bg-color: #1f2937;
+            --text-main: #f3f4f6;
+            --text-sub: #9ca3af;
+            --accent: #818cf8;
+            --correct: #34d399;
+            --error: #f87171;
+            --cursor: #60a5fa;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 顶部状态栏 */
+        .stats-bar {
+            position: absolute;
+            top: 2rem;
+            display: flex;
+            gap: 2rem;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .stat-item span {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* 词汇书切换下拉菜单 */
+        .vocab-selector {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .vocab-selector label {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .vocab-selector select {
+            padding: 0.5rem 0.8rem;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+
+        .vocab-selector select:hover {
+            background-color: #6d28d9;
+        }
+
+        .vocab-selector select:focus {
+            outline: 2px solid var(--cursor);
+            outline-offset: 2px;
+        }
+
+        /* 主游戏区 */
+        .container {
+            text-align: center;
+            position: relative;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        /* 中文释义 */
+        #meaning-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 3rem;
+            color: var(--text-main);
+            min-height: 3.5rem;
+        }
+
+        /* 单词显示区 */
+        #word-display {
+            font-size: 3.5rem;
+            letter-spacing: 0.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 单个字母/下划线样式 */
+        .char {
+            border-bottom: 4px solid var(--text-sub);
+            min-width: 2rem;
+            height: 4.5rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: transparent;
+            transition: all 0.1s;
+        }
+
+        /* 空格字符特殊显示 */
+        .char[data-char=" "] {
+            min-width: 1rem;
+            background-color: rgba(129, 140, 248, 0.1);
+        }
+
+        .char[data-char=" "]::after {
+            content: "⎵";
+            color: var(--text-sub);
+            font-size: 1rem;
+            opacity: 0.5;
+        }
+
+        /* 已输入正确的字母 */
+        .char.correct {
+            color: var(--text-main);
+            border-bottom-color: var(--correct);
+            animation: pop 0.1s ease;
+        }
+
+        /* 当前光标位置 */
+        .char.active {
+            border-bottom-color: var(--cursor);
+        }
+
+        /* 错误时的动画 */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* 提示信息 */
+        .hint {
+            margin-top: 3rem;
+            color: var(--text-sub);
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* 击键音效 - 成功 */
+        @keyframes keypress-success {
+            0% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        /* 语音按钮 */
+        .sound-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sound-btn:hover {
+            background-color: #6d28d9;
+            transform: scale(1.05);
+        }
+
+        .sound-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 完成界面 */
+        .finish-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .finish-screen.show {
+            display: block;
+        }
+
+        .finish-screen h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--correct);
+        }
+
+        .finish-stats {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            color: var(--text-sub);
+        }
+
+        .finish-stats strong {
+            color: var(--accent);
+        }
+
+        .restart-btn {
+            margin-top: 2rem;
+            padding: 0.8rem 2rem;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .restart-btn:hover {
+            background-color: #6d28d9;
+        }
+
+        /* 进度条 */
+        .progress-info {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: rgba(31, 41, 55, 0.9);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--accent);
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            max-width: 200px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: var(--text-sub);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stats-bar">
+        <div class="stat-item">进度: <span id="progress">0/0</span></div>
+        <div class="stat-item">正确率: <span id="accuracy">100%</span></div>
+        <div class="stat-item">连击: <span id="combo">0</span></div>
+    </div>
+
+    <div class="vocab-selector">
+        <label for="vocab-book">词汇书:</label>
+        <select id="vocab-book">
+            <option value="coreVocab3a">3A 核心词汇</option>
+        </select>
+    </div>
+
+    <div class="progress-info">
+        <div id="progress-status">已学: <strong id="learned-count">0</strong> / <strong id="total-count">0</strong></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div class="container" id="game-container">
+        <button id="sound-btn" class="sound-btn" title="点击重复发音">🔊 发音</button>
+        <div id="meaning-display">加载中...</div>
+        <div id="word-display"></div>
+    </div>
+
+    <div class="hint">
+        直接通过键盘输入单词 • Enter 跳过 • Backspace 删除 • 词组中的空格也要输入
+    </div>
+
+    <div class="finish-screen" id="finish-screen">
+        <h1>🎉 练习完成！</h1>
+        <div class="finish-stats">总单词数: <strong id="total-words">0</strong></div>
+        <div class="finish-stats">正确率: <strong id="final-accuracy">100%</strong></div>
+        <div class="finish-stats">最高连击: <strong id="max-combo">0</strong></div>
+        <div class="finish-stats">进度已保存: <strong id="progress-saved">0/0</strong></div>
+        <button class="restart-btn" onclick="location.reload()">继续练习</button>
+        <button class="restart-btn" style="background-color: #34d399; margin-left: 1rem;" onclick="resetProgress()">重新开始</button>
+    </div>
+
+    <script>
+        // === 多个词汇书数据 ===
+        const vocabularyBooks = {
+    
+            coreVocab3a: [
+                { en: "action", zh: "动作片" },
+  { en: "adventure", zh: "冒险片" },
+  { en: "animations", zh: "动画片" },
+  { en: "comedy", zh: "喜剧片" },
+  { en: "documentary", zh: "纪录片" },
+  { en: "fantasy", zh: "奇幻片" },
+  { en: "horror", zh: "恐怖片" },
+  { en: "musical", zh: "歌舞片" },
+  { en: "mystery", zh: "悬疑片" },
+  { en: "romance", zh: "爱情片" },
+  { en: "science fiction", zh: "科幻片" },
+  { en: "superhero", zh: "超级英雄片" },
+  
+  { en: "cast", zh: "演员阵容" },
+  { en: "cinematography", zh: "摄影/运镜" },
+  { en: "computer-generated imagery", zh: "电脑生成图像 (CGI)" },
+  { en: "costume design", zh: "服装设计" },
+  { en: "director", zh: "导演" },
+  { en: "editing", zh: "剪辑" },
+  { en: "hairstyles", zh: "发型" },
+  { en: "make-up", zh: "化妆" },
+  { en: "plot", zh: "情节" },
+  { en: "role", zh: "角色" },
+  { en: "screenplay", zh: "剧本" },
+  { en: "setting", zh: "场景设定" },
+  { en: "visual effects", zh: "视觉特效" },
+  
+  { en: "30-hour fast", zh: "饥馑三十" },
+  { en: "bake sale", zh: "烘焙义卖" },
+  { en: "charity bazaar", zh: "慈善义卖" },
+  { en: "charity concert", zh: "慈善音乐会" },
+  { en: "dance marathon", zh: "跳舞马拉松" },
+  { en: "fashion show", zh: "时装秀" },
+  { en: "flag day", zh: "卖旗日" },
+  { en: "fun fair", zh: "游乐会" },
+  { en: "obstacle race", zh: "障碍赛" },
+  { en: "raffle", zh: "抽奖活动" },
+  { en: "scavenger hunt", zh: "寻宝游戏" },
+  { en: "sponsored run", zh: "赞助跑" },
+  
+  { en: "assistance", zh: "协助" },
+  { en: "awareness", zh: "意识/关注" },
+  { en: "comfort", zh: "安慰" },
+  { en: "compassion", zh: "同情心" },
+  { en: "counselling", zh: "辅导/咨询" },
+  { en: "donate", zh: "捐赠" },
+  { en: "emotional support", zh: "情感支持" },
+  { en: "fundraise", zh: "筹款" },
+  { en: "generosity", zh: "慷慨" },
+  { en: "lend a hand", zh: "伸出援手" },
+  { en: "shelters", zh: "庇护所" },
+  { en: "volunteer", zh: "做义工/志愿者" },
+  
+  { en: "acclaimed", zh: "受到赞誉的" },
+  { en: "accomplished", zh: "有成就的" },
+  { en: "discovery", zh: "发现" },
+  { en: "groundbreaking", zh: "开创性的" },
+  { en: "honour", zh: "荣誉/致敬" },
+  { en: "impact", zh: "影响" },
+  { en: "laid the foundations", zh: "奠定基础" },
+  { en: "legacy", zh: "遗产/传承" },
+  { en: "recognition", zh: "认可" },
+  { en: "reputation", zh: "名声" },
+  { en: "revolutionize", zh: "彻底变革" },
+  { en: "transformed", zh: "改变/转型" },
+  
+  { en: "brainstorm", zh: "头脑风暴" },
+  { en: "challenge", zh: "挑战" },
+  { en: "come up with", zh: "想出" },
+  { en: "curiosity", zh: "好奇心" },
+  { en: "experiments", zh: "实验" },
+  { en: "forward-thinking", zh: "具前瞻性的" },
+  { en: "notion", zh: "念头/想法" },
+  { en: "rule out", zh: "排除" },
+  { en: "think outside the box", zh: "跳出框框思考" },
+  { en: "tweaked", zh: "稍作调整" },
+  { en: "verify", zh: "验证" },
+  { en: "visualize", zh: "想象/构想" },
+  
+  { en: "acrobats'", zh: "杂技演员的" },
+  { en: "Chinese opera", zh: "中国戏曲" },
+  { en: "comedian", zh: "喜剧演员" },
+  { en: "stand-up comedy", zh: "单口喜剧" },
+  { en: "escapologist", zh: "逃脱术表演者" },
+  { en: "magic show", zh: "魔术表演" },
+  { en: "illusionist", zh: "魔术师/幻术师" },
+  { en: "musical", zh: "音乐剧" },
+  { en: "opera singer's", zh: "歌剧演唱家的" },
+  { en: "orchestral concert", zh: "管弦乐音乐会" },
+  { en: "play", zh: "戏剧/话剧" },
+  { en: "pop concert", zh: "流行音乐会" },
+  { en: "puppet shows", zh: "木偶戏" },
+  { en: "ventriloquist's", zh: "腹语师的" },
+  
+  { en: "awe-inspiring", zh: "令人叹为观止的" },
+  { en: "create a connection", zh: "建立联系" },
+  { en: "disengage", zh: "抽离/不投入" },
+  { en: "edgy", zh: "前卫/尖锐" },
+  { en: "mesmerized", zh: "被迷住的" },
+  { en: "pretentious", zh: "做作/自命不凡的" },
+  { en: "rave reviews", zh: "如潮好评" },
+  { en: "responsive audience", zh: "反应热烈的观众" },
+  { en: "stage presence", zh: "台风" },
+  { en: "standing ovation", zh: "起立鼓掌" },
+  { en: "struck a chord", zh: "引起共鸣" },
+  { en: "warm reception", zh: "热烈反响" }
+            ]
+        };
+
+        let currentWordList = vocabularyBooks.coreVocab3a;
+        let currentBookKey = 'coreVocab3a';
+
+        // === 进度记录 ===
+        let learnedWords = {};
+
+        // 使用内存存储（不用 localStorage）
+        let progressStorage = {};
+
+        function loadProgress() {
+            // 内存存储，无法持久化但能在本次会话中工作
+            learnedWords = progressStorage;
+        }
+
+        function saveProgress() {
+            progressStorage = learnedWords;
+            // 仅在控制台显示已学单词数
+            console.log('已学习单词已保存到内存');
+        }
+
+        // === 游戏状态 ===
+        let currentIndex = 0;
+        let currentWordObj = null;
+        let inputIndex = 0;
+        let correctCount = 0;
+        let totalKeystrokes = 0;
+        let combo = 0;
+        let maxCombo = 0;
+
+        // DOM 元素
+        const meaningEl = document.getElementById('meaning-display');
+        const wordEl = document.getElementById('word-display');
+        const containerEl = document.getElementById('game-container');
+        const progressEl = document.getElementById('progress');
+        const accuracyEl = document.getElementById('accuracy');
+        const comboEl = document.getElementById('combo');
+        const finishScreenEl = document.getElementById('finish-screen');
+
+        // 初始化
+        function init() {
+            loadProgress();
+            currentIndex = 0;
+            correctCount = 0;
+            totalKeystrokes = 0;
+            combo = 0;
+            maxCombo = 0;
+            containerEl.style.display = 'block';
+            finishScreenEl.classList.remove('show');
+            updateProgressDisplay();
+            loadWord(0);
+            document.addEventListener('keydown', handleInput);
+        }
+
+        // 加载单词
+        function loadWord(index) {
+            if (index >= currentWordList.length) {
+                finishGame();
+                return;
+            }
+
+            currentIndex = index;
+            currentWordObj = currentWordList[index];
+            inputIndex = 0;
+
+            meaningEl.textContent = currentWordObj.zh;
+            updateStats();
+
+            wordEl.innerHTML = '';
+            const letters = currentWordObj.en.split('');
+            letters.forEach((char, i) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.dataset.char = char === ' ' ? ' ' : char.toLowerCase();
+                // 空格显示为占位符，其他字符显示正常文本
+                span.textContent = char === ' ' ? '' : char;
+                if (i === 0) span.classList.add('active');
+                wordEl.appendChild(span);
+            });
+
+            // 自动播放发音
+            setTimeout(() => {
+                speakWord(true);
+            }, 200);
+        }
+
+        // 处理键盘输入
+        function handleInput(e) {
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+            if (!currentWordObj) return;
+
+            const key = e.key.toLowerCase();
+
+            // 处理 Space 和 Enter
+            if (key === ' ') {
+                e.preventDefault();
+                
+                const charSpans = wordEl.querySelectorAll('.char');
+                const targetChar = currentWordObj.en[inputIndex];
+                
+                // 如果当前位置是空格，输入它；否则跳过
+                if (targetChar === ' ') {
+                    totalKeystrokes++;
+                    correctCount++;
+                    combo++;
+                    if (combo > maxCombo) maxCombo = combo;
+                    
+                    playKeystrokeSound(true);
+                    
+                    const currentSpan = charSpans[inputIndex];
+                    currentSpan.classList.remove('active');
+                    currentSpan.classList.add('correct');
+                    
+                    inputIndex++;
+                    if (inputIndex < currentWordObj.en.length) {
+                        charSpans[inputIndex].classList.add('active');
+                    } else {
+                        markWordAsLearned(currentWordObj.en);
+                        setTimeout(() => {
+                            loadWord(currentIndex + 1);
+                        }, 200);
+                    }
+                    updateStats();
+                } else {
+                    // 不期望空格，直接跳过
+                    combo = 0;
+                    loadWord(currentIndex + 1);
+                }
+                return;
+            }
+            
+            // Enter 总是跳过
+            if (key === 'enter') {
+                e.preventDefault();
+                combo = 0;
+                loadWord(currentIndex + 1);
+                return;
+            }
+
+            // 删除上一字母 (Backspace)
+            if (key === 'backspace' && inputIndex > 0) {
+                e.preventDefault();
+                inputIndex--;
+                const charSpans = wordEl.querySelectorAll('.char');
+                charSpans[inputIndex].classList.remove('correct', 'active');
+                charSpans[inputIndex].classList.add('active');
+                return;
+            }
+
+            if (!/^[a-z]$/.test(key)) return;
+
+            const charSpans = wordEl.querySelectorAll('.char');
+            const targetChar = currentWordObj.en[inputIndex];
+            // 字母比较时转为小写
+            const targetCharLower = targetChar.toLowerCase();
+
+            totalKeystrokes++;
+
+            if (key === targetCharLower) {
+                correctCount++;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+
+                playKeystrokeSound(true); // 播放正确音效
+
+                const currentSpan = charSpans[inputIndex];
+                currentSpan.classList.remove('active');
+                currentSpan.classList.add('correct');
+
+                inputIndex++;
+                if (inputIndex < currentWordObj.en.length) {
+                    charSpans[inputIndex].classList.add('active');
+                } else {
+                    // 标记单词为已学
+                    markWordAsLearned(currentWordObj.en);
+                    setTimeout(() => {
+                        loadWord(currentIndex + 1);
+                    }, 200);
+                }
+
+            } else {
+                combo = 0;
+                playKeystrokeSound(false); // 播放错误音效
+                containerEl.classList.remove('shake');
+                void containerEl.offsetWidth;
+                containerEl.classList.add('shake');
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            progressEl.textContent = `${currentIndex + 1}/${currentWordList.length}`;
+            comboEl.textContent = combo;
+
+            if (totalKeystrokes > 0) {
+                const acc = Math.round((correctCount / totalKeystrokes) * 100);
+                accuracyEl.textContent = `${acc}%`;
+            }
+        }
+
+        // 更新进度显示
+        function updateProgressDisplay() {
+            const bookKey = currentBookKey;
+            const learned = learnedWords[bookKey] ? Object.keys(learnedWords[bookKey]).length : 0;
+            const total = currentWordList.length;
+            const percentage = Math.round((learned / total) * 100);
+
+            document.getElementById('learned-count').textContent = learned;
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('progress-fill').style.width = percentage + '%';
+        }
+
+        // 标记单词为已学
+        function markWordAsLearned(word) {
+            if (!learnedWords[currentBookKey]) {
+                learnedWords[currentBookKey] = {};
+            }
+            learnedWords[currentBookKey][word] = true;
+            saveProgress();
+            updateProgressDisplay();
+        }
+
+        // 重置进度
+        function resetProgress() {
+            if (confirm('确定要重置所有词汇书的进度吗？')) {
+                learnedWords = {};
+                progressStorage = {};
+                location.reload();
+            }
+        }
+
+        // 词汇书切换事件
+        document.getElementById('vocab-book').addEventListener('change', (e) => {
+            const selectedBook = e.target.value;
+            currentBookKey = selectedBook;
+            currentWordList = vocabularyBooks[selectedBook];
+            
+            // 重置游戏状态
+            currentIndex = 0;
+            correctCount = 0;
+            totalKeystrokes = 0;
+            combo = 0;
+            maxCombo = 0;
+            
+            // 重新加载游戏
+            containerEl.style.display = 'block';
+            finishScreenEl.classList.remove('show');
+            updateProgressDisplay();
+            loadWord(0);
+        });
+
+        function finishGame() {
+            document.removeEventListener('keydown', handleInput);
+            containerEl.style.display = 'none';
+            finishScreenEl.classList.add('show');
+
+            document.getElementById('total-words').textContent = currentWordList.length;
+            const finalAcc = totalKeystrokes > 0 ? Math.round((correctCount / totalKeystrokes) * 100) : 100;
+            document.getElementById('final-accuracy').textContent = `${finalAcc}%`;
+            document.getElementById('max-combo').textContent = maxCombo;
+            
+            const learned = learnedWords[currentBookKey] ? Object.keys(learnedWords[currentBookKey]).length : 0;
+            document.getElementById('progress-saved').textContent = `${learned}/${currentWordList.length}`;
+        }
+
+        // 语音合成发音
+        function speakWord(isAutoPlay = false) {
+            if (!currentWordObj) return;
+            
+            try {
+                const utterance = new SpeechSynthesisUtterance(currentWordObj.en);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // 稍微慢一点便于听清
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                
+                window.speechSynthesis.cancel(); // 停止之前的播放
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.warn('语音合成暂不可用:', error);
+            }
+        }
+
+        // 生成击键音效
+        function playKeystrokeSound(isCorrect = true) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                if (isCorrect) {
+                    // 正确时：高音，短促
+                    oscillator.frequency.value = 800;
+                    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                } else {
+                    // 错误时：低音，较长
+                    oscillator.frequency.value = 300;
+                    gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                }
+            } catch (error) {
+                console.warn('音效播放失败:', error);
+            }
+        }
+
+        // 添加语音按钮事件监听
+        document.getElementById('sound-btn').addEventListener('click', () => {
+            speakWord(false);
+        });
+
+        // 启动游戏
+        init();
+
+    </script>
+</body>
+</html>
