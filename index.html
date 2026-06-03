@@ -172,12 +172,6 @@
             opacity: 0.6;
         }
 
-        /* 击键音效 - 成功 */
-        @keyframes keypress-success {
-            0% { transform: scale(1); }
-            100% { transform: scale(1); }
-        }
-
         /* 语音按钮 */
         .sound-btn {
             background-color: var(--accent);
@@ -201,6 +195,12 @@
 
         .sound-btn:active {
             transform: scale(0.98);
+        }
+
+        .sound-btn:disabled {
+            background-color: #6b7280;
+            cursor: not-allowed;
+            transform: scale(1);
         }
 
         /* 完成界面 */
@@ -412,7 +412,7 @@
   { en: "standing ovation", zh: "起立鼓掌" },
   { en: "rave review", zh: "好评" },
   { en: "stage presence", zh: "舞台气场" },
-  { en: "disengage", zh: "失去兴��" }
+  { en: "disengage", zh: "失去兴致" }
             ]
         };
 
@@ -421,18 +421,18 @@
 
         // === 进度记录 ===
         let learnedWords = {};
-
-        // 使用内存存储（不用 localStorage）
         let progressStorage = {};
 
+        // === 音频缓存 ===
+        let audioCache = {};
+        let isPlayingAudio = false;
+
         function loadProgress() {
-            // 内存存储，无法持久化但能在本次会话中工作
             learnedWords = progressStorage;
         }
 
         function saveProgress() {
             progressStorage = learnedWords;
-            // 仅在控制台显示已学单词数
             console.log('已学习单词已保存到内存');
         }
 
@@ -453,6 +453,7 @@
         const accuracyEl = document.getElementById('accuracy');
         const comboEl = document.getElementById('combo');
         const finishScreenEl = document.getElementById('finish-screen');
+        const soundBtn = document.getElementById('sound-btn');
 
         // 初始化
         function init() {
@@ -489,7 +490,6 @@
                 const span = document.createElement('span');
                 span.className = 'char';
                 span.dataset.char = char === ' ' ? ' ' : char.toLowerCase();
-                // 空格显示为占位符���其他字符显示正常文本
                 span.textContent = char === ' ' ? '' : char;
                 if (i === 0) span.classList.add('active');
                 wordEl.appendChild(span);
@@ -508,14 +508,12 @@
 
             const key = e.key.toLowerCase();
 
-            // 处理 Space 键 - 只输入空格，不跳过
             if (key === ' ') {
                 e.preventDefault();
                 
                 const charSpans = wordEl.querySelectorAll('.char');
                 const targetChar = currentWordObj.en[inputIndex];
                 
-                // 如果当前位置是空格，输入它
                 if (targetChar === ' ') {
                     totalKeystrokes++;
                     correctCount++;
@@ -538,14 +536,10 @@
                         }, 200);
                     }
                     updateStats();
-                } else {
-                    // 不期望空格时，按空格键无效（既不跳过也不错误）
-                    // 只是忽略这个输入
                 }
                 return;
             }
             
-            // Enter 总是跳过
             if (key === 'enter') {
                 e.preventDefault();
                 combo = 0;
@@ -553,7 +547,6 @@
                 return;
             }
 
-            // 删除上一字母 (Backspace)
             if (key === 'backspace' && inputIndex > 0) {
                 e.preventDefault();
                 inputIndex--;
@@ -567,7 +560,6 @@
 
             const charSpans = wordEl.querySelectorAll('.char');
             const targetChar = currentWordObj.en[inputIndex];
-            // 字母比较时转为小写
             const targetCharLower = targetChar.toLowerCase();
 
             totalKeystrokes++;
@@ -577,7 +569,7 @@
                 combo++;
                 if (combo > maxCombo) maxCombo = combo;
 
-                playKeystrokeSound(true); // 播放正确音效
+                playKeystrokeSound(true);
 
                 const currentSpan = charSpans[inputIndex];
                 currentSpan.classList.remove('active');
@@ -587,7 +579,6 @@
                 if (inputIndex < currentWordObj.en.length) {
                     charSpans[inputIndex].classList.add('active');
                 } else {
-                    // 标记单词为已学
                     markWordAsLearned(currentWordObj.en);
                     setTimeout(() => {
                         loadWord(currentIndex + 1);
@@ -596,7 +587,7 @@
 
             } else {
                 combo = 0;
-                playKeystrokeSound(false); // 播放错误音效
+                playKeystrokeSound(false);
                 containerEl.classList.remove('shake');
                 void containerEl.offsetWidth;
                 containerEl.classList.add('shake');
@@ -615,7 +606,6 @@
             }
         }
 
-        // 更新进度显示
         function updateProgressDisplay() {
             const bookKey = currentBookKey;
             const learned = learnedWords[bookKey] ? Object.keys(learnedWords[bookKey]).length : 0;
@@ -627,7 +617,6 @@
             document.getElementById('progress-fill').style.width = percentage + '%';
         }
 
-        // 标记单词为已学
         function markWordAsLearned(word) {
             if (!learnedWords[currentBookKey]) {
                 learnedWords[currentBookKey] = {};
@@ -637,7 +626,6 @@
             updateProgressDisplay();
         }
 
-        // 重置进度
         function resetProgress() {
             if (confirm('确定要重置所有词汇书的进度吗？')) {
                 learnedWords = {};
@@ -646,20 +634,17 @@
             }
         }
 
-        // 词汇书切换事件
         document.getElementById('vocab-book').addEventListener('change', (e) => {
             const selectedBook = e.target.value;
             currentBookKey = selectedBook;
             currentWordList = vocabularyBooks[selectedBook];
             
-            // 重置游戏状态
             currentIndex = 0;
             correctCount = 0;
             totalKeystrokes = 0;
             combo = 0;
             maxCombo = 0;
             
-            // 重新加载游戏
             containerEl.style.display = 'block';
             finishScreenEl.classList.remove('show');
             updateProgressDisplay();
@@ -680,21 +665,51 @@
             document.getElementById('progress-saved').textContent = `${learned}/${currentWordList.length}`;
         }
 
-        // 语音合成发音
-        function speakWord(isAutoPlay = false) {
-            if (!currentWordObj) return;
+        // 高质量语音合成 - 使用 Free TTS (ResponsiveVoice 备选)
+        async function speakWord(isAutoPlay = false) {
+            if (!currentWordObj || isPlayingAudio) return;
             
-            try {
-                const utterance = new SpeechSynthesisUtterance(currentWordObj.en);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.9; // 稍微慢一点便于听清
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                
-                window.speechSynthesis.cancel(); // 停止之前的播放
-                window.speechSynthesis.speak(utterance);
-            } catch (error) {
-                console.warn('语音合成暂不可用:', error);
+            const word = currentWordObj.en;
+            
+            // 先尝试使用 ResponsiveVoice (无需 API Key)
+            if (typeof responsiveVoice !== 'undefined') {
+                isPlayingAudio = true;
+                soundBtn.disabled = true;
+                responsiveVoice.speak(word, "UK English Female", {
+                    onend: () => {
+                        isPlayingAudio = false;
+                        soundBtn.disabled = false;
+                    }
+                });
+            } else {
+                // 备选方案：使用浏览器原生 Web Speech API (改进版)
+                try {
+                    isPlayingAudio = true;
+                    soundBtn.disabled = true;
+                    
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1.0;
+                    
+                    utterance.onend = () => {
+                        isPlayingAudio = false;
+                        soundBtn.disabled = false;
+                    };
+                    
+                    utterance.onerror = () => {
+                        isPlayingAudio = false;
+                        soundBtn.disabled = false;
+                    };
+                    
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                } catch (error) {
+                    console.warn('语音播放失败:', error);
+                    isPlayingAudio = false;
+                    soundBtn.disabled = false;
+                }
             }
         }
 
@@ -709,14 +724,12 @@
                 gain.connect(audioContext.destination);
                 
                 if (isCorrect) {
-                    // 正确时：高音，短促
                     oscillator.frequency.value = 800;
                     gain.gain.setValueAtTime(0.3, audioContext.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.1);
                 } else {
-                    // 错误时：低音，较长
                     oscillator.frequency.value = 300;
                     gain.gain.setValueAtTime(0.2, audioContext.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
@@ -728,14 +741,14 @@
             }
         }
 
-        // 添加语音按钮事件监听
-        document.getElementById('sound-btn').addEventListener('click', () => {
+        soundBtn.addEventListener('click', () => {
             speakWord(false);
         });
 
-        // 启动游戏
         init();
-
     </script>
+
+    <!-- 引入 ResponsiveVoice 库 (免费、高质量发音) -->
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
 </body>
 </html>
