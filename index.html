@@ -5,17 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VocabExercises — AI-Powered Vocabulary Workflow</title>
 <style>
-:root {
-  --bg: #0f172a; --surf: #1e293b; --surf2: #334155;
-  --text: #f1f5f9; --text2: #94a3b8; --accent: #818cf8;
-  --green: #34d399; --red: #f87171; --amber: #fbbf24;
-  --radius: 12px;
-}
+:root { --bg:#1f2937; --surf:#374151; --text:#f3f4f6; --text2:#9ca3af; --accent:#818cf8; --correct:#34d399; --error:#f87171; --cursor:#60a5fa; --amber:#fbbf24; --radius:12px; }
 
 * { margin:0; padding:0; box-sizing:border-box; }
+
 body {
-  background: var(--bg); color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
   min-height:100vh; overflow-x:hidden;
 }
 
@@ -34,139 +30,123 @@ body {
 }
 .mode-tab.active { background:var(--accent); color:#fff; }
 
-/* ===== WORKFLOW PANEL ===== */
-.panel {
-  background: var(--surf); border-radius:var(--radius); padding:32px;
-  margin-bottom:24px; border:1px solid var(--surf2);
-}
+/* ===== PANELS ===== */
+.panel { background:var(--surf); border-radius:var(--radius); padding:32px; margin-bottom:24px; border:1px solid rgba(255,255,255,.06); }
 
 /* ===== WORKFLOW STEPS ===== */
 .wf-steps { display:flex; gap:0; margin-bottom:28px; align-items:center; }
-.wf-step {
-  display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text2);
-  flex:1; position:relative;
-}
-.wf-step .num {
-  width:26px; height:26px; border-radius:50%; display:flex; align-items:center;
-  justify-content:center; font-size:12px; font-weight:700;
-  background:var(--surf2); color:var(--text2); flex-shrink:0;
-}
-.wf-step.active .num { background:var(--accent); color:#fff; }
-.wf-step.done .num { background:var(--green); color:#0f172a; }
-.wf-step .label { white-space:nowrap; font-weight:500; }
+.wf-step { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text2); flex:1; }
+.wf-step .num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:var(--surf); color:var(--text2); flex-shrink:0; border:2px solid var(--surf); }
+.wf-step.active .num { background:var(--accent); color:#fff; border-color:var(--accent); }
+.wf-step.done .num { background:var(--correct); color:#1f2937; border-color:var(--correct); }
+.wf-step .label { white-space:nowrap; font-weight:500; font-size:12px; }
 .wf-step.active .label { color:var(--text); font-weight:600; }
-.wf-step.done .label { color:var(--green); }
-.wf-connector { flex:1; height:2px; background:var(--surf2); margin:0 8px; min-width:20px; }
-.wf-connector.done { background:var(--green); }
+.wf-step.done .label { color:var(--correct); }
+.wf-connector { flex:1; height:2px; background:var(--surf); margin:0 4px; min-width:20px; }
+.wf-connector.done { background:var(--correct); }
 
-/* ===== UPLOAD ZONE ===== */
-.upload-zone {
-  border:2px dashed var(--surf2); border-radius:var(--radius);
-  padding:48px 24px; text-align:center; cursor:pointer;
-  transition:all .2s; position:relative;
-}
+/* ===== UPLOAD ===== */
+.upload-zone { border:2px dashed var(--surf); border-radius:var(--radius); padding:48px 24px; text-align:center; cursor:pointer; transition:all .2s; }
 .upload-zone:hover { border-color:var(--accent); background:rgba(129,140,248,.04); }
-.upload-zone.dragover { border-color:var(--accent); background:rgba(129,140,248,.08); }
 .upload-icon { font-size:40px; margin-bottom:12px; }
 .upload-zone h3 { font-size:16px; margin-bottom:6px; }
 .upload-zone p { font-size:13px; color:var(--text2); }
 .upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
-.upload-zone .hint { margin-top:12px; font-size:11px; color:var(--text2); }
 .preview-img { max-width:100%; max-height:240px; border-radius:8px; margin-top:16px; display:none; }
 
 /* ===== LOADING ===== */
 .loading-box { text-align:center; padding:40px 20px; }
-.spinner {
-  width:36px; height:36px; border:3px solid var(--surf2);
-  border-top-color:var(--accent); border-radius:50%;
-  animation:spin .8s linear infinite; margin:0 auto 16px;
-}
+.spinner { width:36px; height:36px; border:3px solid var(--surf); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
 @keyframes spin { to{transform:rotate(360deg)} }
 
-/* ===== WORD LIST ===== */
+/* ===== WORD GRID ===== */
 .word-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin:16px 0; }
-.word-chip {
-  background:var(--surf2); border-radius:8px; padding:10px 14px;
-  display:flex; justify-content:space-between; align-items:center;
-  cursor:pointer; transition:all .15s; font-size:14px;
-  border:2px solid transparent; user-select:none;
-}
-.word-chip:hover { background:#3b4455; }
+.word-chip { background:var(--bg); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:all .15s; font-size:14px; border:2px solid transparent; user-select:none; }
+.word-chip:hover { background:#4b5563; }
 .word-chip.selected { border-color:var(--accent); background:rgba(129,140,248,.12); }
 .word-chip.removed { opacity:.25; text-decoration:line-through; }
 .word-chip .ch { font-size:16px; font-weight:600; }
 .word-chip .en { font-size:12px; color:var(--text2); }
 
 /* ===== BUTTONS ===== */
-.btn {
-  display:inline-flex; align-items:center; gap:6px; padding:10px 24px;
-  border-radius:24px; font-size:14px; font-weight:600; cursor:pointer;
-  border:none; transition:all .2s; text-decoration:none;
-}
+.btn { display:inline-flex; align-items:center; gap:6px; padding:10px 24px; border-radius:24px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s; text-decoration:none; }
 .btn-pri { background:var(--accent); color:#fff; }
 .btn-pri:hover { background:#6366f1; transform:translateY(-1px); }
 .btn-pri:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-.btn-sec { background:var(--surf2); color:var(--text); }
-.btn-sec:hover { background:#475569; }
+.btn-sec { background:var(--surf); color:var(--text); }
+.btn-sec:hover { background:#4b5563; }
 .btn-row { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
 
-/* ===== AI SETTINGS ===== */
-.api-config {
-  display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;
+/* ===== TYPING GAME (original style preserved) ===== */
+.typing-container { text-align:center; max-width:800px; margin:0 auto; }
+
+.meaning-display { font-size:2.5rem; font-weight:bold; margin-bottom:2.5rem; min-height:3.5rem; color:var(--text); }
+
+.word-display { font-size:3.5rem; letter-spacing:0.5rem; display:flex; justify-content:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:2rem; }
+
+.char {
+  border-bottom:4px solid var(--text2); min-width:2rem; height:4.5rem;
+  display:flex; align-items:flex-end; justify-content:center;
+  color:transparent; transition:all .1s; font-family:'Menlo','Monaco','Courier New',monospace;
 }
-.api-config label { font-size:13px; color:var(--text2); }
-.api-config input, .api-config select {
-  background:var(--surf2); border:1px solid var(--surf2); color:var(--text);
-  padding:8px 12px; border-radius:8px; font-size:13px; width:100%; max-width:300px;
+.char[data-char=" "] { min-width:1rem; background-color:rgba(129,140,248,.1); }
+.char[data-char=" "]::after { content:"⎵"; color:var(--text2); font-size:1rem; opacity:.5; }
+.char.correct { color:var(--text); border-bottom-color:var(--correct); animation:pop .1s ease; }
+.char.active { border-bottom-color:var(--cursor); }
+
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+@keyframes shake { 10%,90%{transform:translate3d(-1px,0,0)} 20%,80%{transform:translate3d(2px,0,0)} 30%,50%,70%{transform:translate3d(-4px,0,0)} 40%,60%{transform:translate3d(4px,0,0)} }
+
+.shake { animation:shake .4s cubic-bezier(.36,.07,.19,.97) both; }
+
+.sound-btn {
+  background:var(--accent); color:#fff; border:none; padding:0.6rem 1.2rem;
+  border-radius:0.5rem; font-size:0.95rem; cursor:pointer; transition:all .2s;
+  margin-bottom:1.5rem; display:inline-flex; align-items:center; gap:0.5rem;
 }
-.api-config input:focus { border-color:var(--accent); outline:none; }
-.grade-select { max-width:200px !important; }
+.sound-btn:hover { background:#6d28d9; transform:scale(1.05); }
+.sound-btn:active { transform:scale(0.98); }
+.sound-btn:disabled { background:#6b7280; cursor:not-allowed; transform:scale(1); }
 
-/* ===== SECTION HEADER ===== */
-.sec-title { font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.typing-stats { display:flex; gap:2rem; justify-content:center; color:var(--text2); font-size:0.9rem; margin-bottom:2rem; }
+.typing-stats .stat-item span { color:var(--accent); font-weight:bold; }
 
-/* Error / notice */
-.notice { background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--amber); margin:16px 0; }
-.error-box { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--red); margin:16px 0; }
+.hint-text { margin-top:2rem; color:var(--text2); font-size:0.8rem; opacity:.6; }
 
-/* ===== TYPING PRACTICE (EXISTING) ===== */
-.practice-area { display:none; }
-.practice-area.active { display:block; }
+.finish-screen { display:none; text-align:center; }
+.finish-screen.show { display:block; }
+.finish-screen h1 { font-size:2.5rem; margin-bottom:2rem; color:var(--correct); }
+.finish-stats { font-size:1.2rem; margin:1rem 0; color:var(--text2); }
+.finish-stats strong { color:var(--accent); }
 
-.stats-bar { display:flex; gap:24px; margin-bottom:20px; flex-wrap:wrap; }
-.stat-item span { color:var(--accent); font-weight:bold; }
+.progress-info { font-size:0.85rem; color:var(--text2); text-align:center; margin-top:1rem; }
+.progress-bar { width:200px; height:6px; background:var(--surf); border-radius:3px; margin:0.5rem auto; overflow:hidden; }
+.progress-fill { height:100%; background:var(--accent); transition:width .3s ease; }
 
-.display { text-align:center; font-size:64px; font-weight:700; padding:40px 20px; min-height:120px; display:flex; align-items:center; justify-content:center; }
-.input-area { text-align:center; }
-.input-area input {
-  background:var(--surf2); border:2px solid var(--surf2); color:var(--text);
-  padding:14px 20px; border-radius:12px; font-size:22px; width:280px; max-width:90vw;
-  text-align:center; font-family:inherit; transition:border-color .2s;
-}
-.input-area input:focus { border-color:var(--accent); outline:none; }
-.input-area input.wrong { border-color:var(--red); }
-.input-area input.correct-anim { border-color:var(--green); }
+/* ===== SETTINGS ===== */
+.api-config { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.api-config label { font-size:13px; color:var(--text2); font-weight:600; }
+.api-config input, .api-config select { background:var(--bg); border:1px solid var(--surf); color:var(--text); padding:8px 12px; border-radius:8px; font-size:13px; max-width:300px; }
+.api-config input:focus, .api-config select:focus { border-color:var(--accent); outline:none; }
 
-.word-counter { text-align:center; margin-top:20px; font-size:13px; color:var(--text2); }
+.error-box { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--error); margin:16px 0; }
+.notice-box { background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--amber); margin:16px 0; }
+
+.sec-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+.hidden { display:none !important; }
+
+.word-counter { text-align:center; margin-top:1rem; font-size:13px; color:var(--text2); }
 .word-counter span { color:var(--accent); font-weight:700; }
-.feedback { text-align:center; margin-top:12px; font-size:14px; min-height:24px; }
-.stats-final { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin:24px 0; }
-.stats-final .big-stat { text-align:center; }
-.stats-final .big-stat .val { font-size:36px; font-weight:800; color:var(--accent); }
-.stats-final .big-stat .lbl { font-size:12px; color:var(--text2); }
 
-.back-btn { margin-top:16px; }
-
-/* ===== RESPONSIVE ===== */
 @media (max-width:640px) {
   .header { flex-direction:column; align-items:flex-start; }
-  .display { font-size:40px; padding:24px 16px; }
-  .word-grid { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); }
-  .wf-steps { flex-wrap:wrap; gap:8px; }
+  .meaning-display { font-size:1.8rem; }
+  .word-display { font-size:2.2rem; letter-spacing:0.3rem; }
+  .char { min-width:1.5rem; height:3.5rem; }
+  .wf-steps { flex-wrap:wrap; gap:4px; }
   .wf-connector { display:none; }
+  .word-grid { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); }
 }
-
-.hidden { display:none !important; }
 </style>
 </head>
 <body>
@@ -177,162 +157,140 @@ body {
   <div class="header">
     <h1>Vocab<span>Exercises</span></h1>
     <div class="mode-tabs">
-      <button class="mode-tab active" onclick="switchMode('workflow')" id="tab-workflow">Workflow</button>
+      <button class="mode-tab active" onclick="switchMode('workflow')" id="tab-workflow">AI Workflow</button>
       <button class="mode-tab" onclick="switchMode('practice')" id="tab-practice">Quick Practice</button>
     </div>
   </div>
 
-  <!-- ===== WORKFLOW MODE ===== -->
+  <!-- ===== WORKFLOW VIEW ===== -->
   <div id="workflowView">
 
-    <!-- Step indicator -->
     <div class="wf-steps">
-      <div class="wf-step active" id="step1">
-        <span class="num">1</span><span class="label">Upload</span>
-      </div>
+      <div class="wf-step active" id="step1"><span class="num">1</span><span class="label">Upload</span></div>
       <div class="wf-connector" id="conn1"></div>
-      <div class="wf-step" id="step2">
-        <span class="num">2</span><span class="label">AI Extract</span>
-      </div>
+      <div class="wf-step" id="step2"><span class="num">2</span><span class="label">AI Extract</span></div>
       <div class="wf-connector" id="conn2"></div>
-      <div class="wf-step" id="step3">
-        <span class="num">3</span><span class="label">Review Words</span>
-      </div>
+      <div class="wf-step" id="step3"><span class="num">3</span><span class="label">Review</span></div>
       <div class="wf-connector" id="conn3"></div>
-      <div class="wf-step" id="step4">
-        <span class="num">4</span><span class="label">Practice</span>
-      </div>
+      <div class="wf-step" id="step4"><span class="num">4</span><span class="label">Practice</span></div>
     </div>
 
-    <!-- STEP 1: Upload -->
+    <!-- Step 1: Upload -->
     <div class="panel" id="panel-upload">
-      <div class="sec-title">Step 1: Upload Your Study Material</div>
-      <div class="upload-zone" id="uploadZone">
+      <div class="sec-title">Step 1 · Upload Your Study Material</div>
+      <div class="upload-zone" id="uploadZone" style="position:relative;">
         <div class="upload-icon">📸</div>
         <h3>Click or drag to upload</h3>
         <p>Screenshot of textbook, notes, or past paper</p>
-        <p class="hint">Supports: JPG · PNG · WebP · PDF (max 10MB)</p>
+        <p style="font-size:11px;color:var(--text2);margin-top:6px;">JPG · PNG · PDF (max 10MB)</p>
         <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFile(event)">
       </div>
       <img class="preview-img" id="previewImg" alt="Preview">
     </div>
 
-    <!-- STEP 2: Extracting (shown after upload) -->
+    <!-- Step 2: Extracting -->
     <div class="panel hidden" id="panel-extracting">
       <div class="loading-box">
         <div class="spinner"></div>
-        <h3>AI is analyzing your material...</h3>
-        <p style="color:var(--text2);margin-top:8px;font-size:14px;">Extracting vocabulary · Filtering by your level · Building word list</p>
+        <h3>AI is reading your material...</h3>
+        <p style="color:var(--text2);margin-top:8px;">Extracting words · Filtering by level · Building your list</p>
       </div>
     </div>
 
-    <!-- STEP 3: Review Words -->
+    <!-- Step 3: Review -->
     <div class="panel hidden" id="panel-review">
-      <div class="sec-title">Step 3: Review Your Word List</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
-        Click a word to remove it. Only words you keep will be added to your practice.
-      </p>
+      <div class="sec-title">Step 3 · Review Your Word List</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Click a word to remove it. Only kept words go to practice.</p>
       <div class="word-grid" id="wordGrid"></div>
-      <div style="font-size:13px;color:var(--text2);margin-top:8px;" id="wordCount">
-        <span id="selectedCount">0</span> words selected
-      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:8px;"><span id="selectedCount">0</span> words selected</div>
       <div class="btn-row">
-        <button class="btn btn-pri" onclick="startPractice()" id="btnStartPractice">
-          Start Practice
-        </button>
-        <button class="btn btn-sec" onclick="resetWorkflow()">Back to Upload</button>
+        <button class="btn btn-pri" onclick="startPractice()" id="btnStartPractice">Start Practice</button>
+        <button class="btn btn-sec" onclick="resetWorkflow()">← Back</button>
       </div>
     </div>
 
-    <!-- STEP 4: Practice -->
+    <!-- Step 4: Practice (original typing game) -->
     <div class="panel hidden" id="panel-practice">
-      <div class="practice-area active">
-        <div class="stats-bar">
-          <div class="stat-item">Accuracy: <span id="accuracy">100%</span></div>
-          <div class="stat-item">WPM: <span id="wpm">0</span></div>
-        </div>
-        <div class="display" id="display"></div>
-        <div class="input-area">
-          <input type="text" id="typingInput" placeholder="Type the word..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-        </div>
-        <div class="feedback" id="feedback"></div>
-        <div class="word-counter">
-          <span id="currentWordNum">1</span> / <span id="totalWords">0</span>
-        </div>
-        <div class="btn-row" style="justify-content:center;">
-          <button class="btn btn-sec back-btn" onclick="resetWorkflow()">← Back</button>
-        </div>
+      <div class="typing-stats">
+        <div class="stat-item">Accuracy: <span id="wfAccuracy">100%</span></div>
+        <div class="stat-item">Combo: <span id="wfCombo">0</span></div>
+        <div class="stat-item">Progress: <span id="wfProgress">0/0</span></div>
+      </div>
+
+      <div class="typing-container">
+        <button class="sound-btn" id="wfSoundBtn" onclick="speakWord()" title="Click to replay">🔊 Speak</button>
+        <div class="meaning-display" id="wfMeaning"></div>
+        <div class="word-display" id="wfWordDisplay"></div>
+      </div>
+
+      <p class="hint-text">Just start typing · Enter to skip · Backspace works · Space character must be typed too</p>
+
+      <div class="progress-info">
+        <div id="wfProgressStatus">Learned: <strong id="wfLearned">0</strong> / <strong id="wfTotal">0</strong></div>
+        <div class="progress-bar"><div class="progress-fill" id="wfProgressFill" style="width:0%"></div></div>
       </div>
     </div>
 
-    <!-- Practice Completed -->
+    <!-- Practice Complete -->
     <div class="panel hidden" id="panel-complete">
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-        <h2>Practice Complete!</h2>
-        <div class="stats-final" style="margin:24px 0;">
-          <div class="big-stat"><div class="val" id="finalAccuracy">-</div><div class="lbl">Accuracy</div></div>
-          <div class="big-stat"><div class="val" id="finalWPM">-</div><div class="lbl">WPM</div></div>
-          <div class="big-stat"><div class="val" id="finalWords">-</div><div class="lbl">Words Practiced</div></div>
-        </div>
-        <div class="btn-row" style="justify-content:center;">
-          <button class="btn btn-pri" onclick="resetWorkflow()">New Material</button>
-        </div>
+      <div class="finish-screen show">
+        <h1>🎉 Practice Complete!</h1>
+        <div class="finish-stats">Accuracy: <strong id="wfFinalAcc">-</strong></div>
+        <div class="finish-stats">Max Combo: <strong id="wfFinalCombo">-</strong></div>
+        <div class="finish-stats">Words: <strong id="wfFinalWords">-</strong></div>
+        <button class="btn btn-pri" onclick="resetWorkflow()" style="margin-top:16px;">New Material</button>
       </div>
     </div>
 
-    <!-- Settings -->
+    <!-- API Settings -->
     <div class="panel" style="margin-top:16px; padding:20px 24px;">
-      <details>
-        <summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);">AI Settings</summary>
+      <details><summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);">AI Settings</summary>
         <div class="api-config" style="margin-top:12px;">
-          <label>DeepSeek API Key</label>
+          <label>DeepSeek Key</label>
           <input type="password" id="apiKey" placeholder="sk-..." onchange="saveKey()">
-          <label>Grade Level</label>
-          <select class="grade-select" id="gradeLevel" onchange="saveGrade()">
-            <option value="DSE">DSE (Senior Secondary)</option>
-            <option value="S3">S1–S3 (Junior Secondary)</option>
-            <option value="P6">P4–P6 (Upper Primary)</option>
-            <option value="P3">P1–P3 (Lower Primary)</option>
-            <option value="IELTS">IELTS / Academic</option>
-            <option value="auto">Auto-detect from text</option>
+          <label>Level</label>
+          <select id="gradeLevel" onchange="saveGrade()">
+            <option value="DSE">DSE</option>
+            <option value="S3">S1–S3</option>
+            <option value="P6">P4–P6</option>
+            <option value="auto">Auto-detect</option>
           </select>
         </div>
-        <p style="font-size:11px;color:var(--text2);margin-top:8px;">
-          Get a free API key at <a href="https://platform.deepseek.com" target="_blank" style="color:var(--accent);">platform.deepseek.com</a>.
-          Your key is stored locally and never sent anywhere except DeepSeek's API.
-        </p>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px;">Get a key at platform.deepseek.com · Stored locally · Demo works without key</p>
       </details>
     </div>
   </div>
 
-  <!-- ===== DIRECT PRACTICE MODE (existing vocab books) ===== -->
+  <!-- ===== QUICK PRACTICE VIEW (original DSE lists) ===== -->
   <div id="practiceView" class="hidden">
     <div class="panel">
-      <div class="sec-title">Quick Practice — Pre-built Word Lists</div>
-      <div class="api-config">
-        <label>Vocabulary Set:</label>
-        <select id="vocabSet" onchange="loadVocabSet()">
-          <option value="dse3a">DSE 3A</option>
-          <option value="dse3b">DSE 3B</option>
-          <option value="dse4a">DSE 4A</option>
-          <option value="dse4b">DSE 4B</option>
-          <option value="custom">Custom List</option>
+      <div class="typing-stats">
+        <div class="stat-item">Accuracy: <span id="dAccuracy">100%</span></div>
+        <div class="stat-item">Combo: <span id="dCombo">0</span></div>
+        <div class="stat-item">Progress: <span id="dProgress">0/0</span></div>
+      </div>
+
+      <div class="typing-container">
+        <button class="sound-btn" id="dSoundBtn" onclick="speakDWord()">🔊 Speak</button>
+        <div class="meaning-display" id="dMeaning"></div>
+        <div class="word-display" id="dWordDisplay"></div>
+      </div>
+
+      <p class="hint-text">Just start typing · Enter to skip · Space in phrases must be typed</p>
+
+      <div style="margin-top:2rem;text-align:center;">
+        <label style="font-size:13px;color:var(--text2);">Vocabulary Set:</label>
+        <select id="vocabSet" onchange="loadVocabSet()" style="margin-left:8px;padding:6px 12px;background:var(--surf);color:var(--text);border:none;border-radius:6px;">
+          <option value="dse3a">3A 核心词汇</option>
+          <option value="dse3b">3B 核心词汇</option>
+          <option value="dse4a">4A 核心词汇</option>
+          <option value="dse4b">4B 核心词汇</option>
         </select>
       </div>
-      <div class="practice-area active" id="directPractice">
-        <div class="stats-bar">
-          <div class="stat-item">Accuracy: <span id="dAccuracy">100%</span></div>
-          <div class="stat-item">WPM: <span id="dWpm">0</span></div>
-        </div>
-        <div class="display" id="dDisplay"></div>
-        <div class="input-area">
-          <input type="text" id="dInput" placeholder="Type the word..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-        </div>
-        <div class="feedback" id="dFeedback"></div>
-        <div class="word-counter">
-          <span id="dCurrent">1</span> / <span id="dTotal">0</span>
-        </div>
+
+      <div class="progress-info">
+        <div id="dProgressStatus">Learned: <strong id="dLearned">0</strong> / <strong id="dTotal">0</strong></div>
+        <div class="progress-bar"><div class="progress-fill" id="dProgressFill" style="width:0%"></div></div>
       </div>
     </div>
   </div>
@@ -340,75 +298,45 @@ body {
 </div>
 
 <script>
-// ===== STATE =====
+// ===== SOUND =====
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+}
+
+// ===== MODE SWITCH =====
 let mode = 'workflow';
-let currentStep = 1;
-let extractedWords = [];
-let practiceWords = [];
-let fileData = null;
-
-// Practice state
-let wordIndex = 0;
-let correctCount = 0;
-let totalTyped = 0;
-let startTime = 0;
-let currentWord = '';
-
-// Direct practice state
-let dIndex = 0; let dCorrect = 0; let dTyped = 0; let dStart = 0; let dWords = [];
-
-// ===== MODE SWITCHING =====
 function switchMode(m) {
   mode = m;
-  document.getElementById('tab-workflow').classList.toggle('active', m === 'workflow');
-  document.getElementById('tab-practice').classList.toggle('active', m === 'practice');
-  document.getElementById('workflowView').classList.toggle('hidden', m !== 'workflow');
-  document.getElementById('practiceView').classList.toggle('hidden', m !== 'practice');
-  if (m === 'practice') {
-    loadVocabSet();
-  }
+  document.getElementById('tab-workflow').classList.toggle('active', m==='workflow');
+  document.getElementById('tab-practice').classList.toggle('active', m==='practice');
+  document.getElementById('workflowView').classList.toggle('hidden', m!=='workflow');
+  document.getElementById('practiceView').classList.toggle('hidden', m!=='practice');
+  if (m==='practice') loadVocabSet();
 }
 
-// ===== FILE UPLOAD =====
+// ===== WORKFLOW UPLOAD =====
 const uploadZone = document.getElementById('uploadZone');
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('dragover');
-  handleFile({ target: { files: e.dataTransfer.files } });
-});
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.style.borderColor='var(--accent)';});
+uploadZone.addEventListener('dragleave',()=>uploadZone.style.borderColor='');
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.style.borderColor='';handleFile({target:{files:e.dataTransfer.files}});});
+
+let fileData=null, extractedWords=[], wfWords=[], wfIndex=0,wfCorrect=0,wfTyped=0,wfCombo=0,wfMaxCombo=0;
 
 function handleFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { alert('File too large (max 10MB)'); return; }
-
-  // Show preview for images
-  if (file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = document.getElementById('previewImg');
-      img.src = ev.target.result;
-      img.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // Convert file to base64
-  const reader = new FileReader();
-  reader.onload = ev => {
-    fileData = { name: file.name, type: file.type, data: ev.target.result };
-    startExtraction();
-  };
-  reader.readAsDataURL(file);
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>10*1024*1024){alert('File too large (max 10MB)');return;}
+  if(f.type.startsWith('image/')){const r=new FileReader();r.onload=ev=>{document.getElementById('previewImg').src=ev.target.result;document.getElementById('previewImg').style.display='block';};r.readAsDataURL(f);}
+  const r=new FileReader();r.onload=ev=>{fileData={name:f.name,type:f.type,data:ev.target.result};startExtraction();};r.readAsDataURL(f);
 }
 
-// ===== EXTRACTION =====
+// ===== AI EXTRACTION =====
 async function startExtraction() {
-  currentStep = 2;
-  updateSteps();
-
+  wfStep(2);
   document.getElementById('panel-upload').classList.add('hidden');
   document.getElementById('panel-extracting').classList.remove('hidden');
   document.getElementById('panel-review').classList.add('hidden');
@@ -417,293 +345,259 @@ async function startExtraction() {
   const grade = localStorage.getItem('vocab_grade') || 'auto';
 
   if (!apiKey) {
-    // Demo mode — generate sample words for visual demo
     await new Promise(r => setTimeout(r, 1500));
-    extractedWords = generateDemoWords();
+    extractedWords = [
+      {en:'algorithm',zh:'算法'},{en:'hypothesis',zh:'假设'},{en:'infrastructure',zh:'基础设施'},
+      {en:'sustainable',zh:'可持续的'},{en:'paradigm',zh:'范式'},{en:'empirical',zh:'实证的'},
+      {en:'correlation',zh:'相关性'},{en:'synthesis',zh:'综合'},{en:'implement',zh:'实施'},
+      {en:'preliminary',zh:'初步的'},{en:'variable',zh:'变量'},{en:'consequently',zh:'因此'},
+      {en:'predominant',zh:'主导的'},{en:'ambiguous',zh:'模糊的'},{en:'substantial',zh:'大量的'},
+      {en:'contradict',zh:'矛盾'},{en:'analogy',zh:'类比'},{en:'abstract',zh:'抽象的'},
+    ];
     showReviewPanel();
     return;
   }
 
   try {
-    const resp = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a vocabulary extraction assistant for English learners in Hong Kong.
-Given text from study materials, extract English vocabulary words that a ${grade}-level student should learn.
-For each word, provide: the word, its Chinese meaning, and a difficulty rating (1-5).
-Return ONLY a JSON array: [{"en":"word","zh":"meaning","diff":3},...].
-Extract 12-25 words. Focus on words useful for the student's level — not too easy, not too hard (ZPD principle).
-Ignore words the student almost certainly already knows at ${grade} level.`
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extract vocabulary words suitable for my level from this material. Give me only the JSON array.'
-              },
-              {
-                type: 'image_url',
-                image_url: { url: fileData.data }
-              }
-            ]
-          }
+    const resp = await fetch('https://api.deepseek.com/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({
+        model:'deepseek-chat',
+        messages:[
+          {role:'system',content:`Extract English vocabulary from study materials for a ${grade}-level student in Hong Kong. For each word provide: English word, Chinese meaning. Return ONLY JSON array: [{"en":"word","zh":"meaning"},...]. Extract 12-25 words. ZPD principle: skip words too easy for ${grade}, skip extremely rare words.`},
+          {role:'user',content:[{type:'text',text:'Extract vocabulary from this material. Return ONLY JSON array.'},{type:'image_url',image_url:{url:fileData.data}}]}
         ],
-        max_tokens: 2000,
-        temperature: 0.3
+        max_tokens:2000,temperature:0.3
       })
     });
-
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const content = data.choices[0].message.content;
-    // Extract JSON array from response
-    const match = content.match(/\[[\s\S]*\]/);
-    if (match) {
-      extractedWords = JSON.parse(match[0]);
-    } else {
-      throw new Error('Could not parse word list from AI response');
-    }
-  } catch (e) {
-    console.error('Extraction failed:', e);
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const content=data.choices[0].message.content;
+    const match=content.match(/\[[\s\S]*\]/);
+    if(match) extractedWords=JSON.parse(match[0]);
+    else throw new Error('Could not parse');
+  } catch(e) {
     document.getElementById('panel-extracting').classList.add('hidden');
-    const errDiv = document.createElement('div');
-    errDiv.className = 'error-box';
-    errDiv.innerHTML = `<strong>Extraction failed:</strong> ${e.message}<br><br>
+    const err=document.createElement('div'); err.className='error-box';
+    err.innerHTML=`<strong>Extraction failed:</strong> ${e.message}<br><br>
       <button class="btn btn-sec" onclick="resetWorkflow()">Try Again</button>
-      &nbsp; or &nbsp;
-      <button class="btn btn-sec" onclick="extractedWords=generateDemoWords();showReviewPanel();">Use Demo Words</button>`;
-    document.getElementById('workflowView').insertBefore(errDiv, document.getElementById('panel-extracting'));
+      &nbsp; <button class="btn btn-sec" onclick="extractedWords=[{en:'algorithm',zh:'算法'},{en:'hypothesis',zh:'假设'},{en:'sustainable',zh:'可持续的'},{en:'paradigm',zh:'范式'},{en:'empirical',zh:'实证的'},{en:'correlation',zh:'相关性'},{en:'implement',zh:'实施'},{en:'variable',zh:'变量'},{en:'ambiguous',zh:'模糊的'},{en:'substantial',zh:'大量的'},{en:'analogy',zh:'类比'},{en:'abstract',zh:'抽象的'}];showReviewPanel();">Use Demo Words</button>`;
+    document.getElementById('workflowView').insertBefore(err,document.getElementById('panel-extracting'));
   }
-
-  if (extractedWords.length > 0) {
-    showReviewPanel();
-  }
-}
-
-function generateDemoWords() {
-  return [
-    {en:'algorithm',zh:'算法',diff:4},{en:'hypothesis',zh:'假设',diff:3},
-    {en:'infrastructure',zh:'基础设施',diff:3},{en:'sustainable',zh:'可持续的',diff:2},
-    {en:'paradigm',zh:'范式',diff:5},{en:'empirical',zh:'实证的',diff:4},
-    {en:'correlation',zh:'相关性',diff:3},{en:'synthesis',zh:'综合',diff:3},
-    {en:'abstract',zh:'抽象的',diff:2},{en:'implement',zh:'实施',diff:2},
-    {en:'preliminary',zh:'初步的',diff:3},{en:'variable',zh:'变量',diff:2},
-    {en:'consequently',zh:'因此',diff:2},{en:'predominant',zh:'主导的',diff:4},
-    {en:'ambiguous',zh:'模糊的',diff:3},{en:'substantial',zh:'大量的',diff:3},
-    {en:'contradict',zh:'矛盾',diff:3},{en:'analogy',zh:'类比',diff:3},
-  ];
+  if(extractedWords.length>0) showReviewPanel();
 }
 
 function showReviewPanel() {
-  currentStep = 3;
-  updateSteps();
-
+  wfStep(3);
   document.getElementById('panel-extracting').classList.add('hidden');
   document.getElementById('panel-review').classList.remove('hidden');
-
-  const grid = document.getElementById('wordGrid');
-  grid.innerHTML = '';
-  extractedWords.forEach((w, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'word-chip selected';
-    chip.dataset.index = i;
-    chip.innerHTML = `<div><span class="ch">${w.en}</span><br><span class="en">${w.zh}</span></div>`;
-    chip.onclick = () => {
-      chip.classList.toggle('selected');
-      chip.classList.toggle('removed');
-      updateWordCount();
-    };
+  const grid=document.getElementById('wordGrid'); grid.innerHTML='';
+  extractedWords.forEach((w,i)=>{
+    const chip=document.createElement('div'); chip.className='word-chip selected'; chip.dataset.index=i;
+    chip.innerHTML=`<div><span class="ch">${w.en}</span><br><span class="en">${w.zh}</span></div>`;
+    chip.onclick=()=>{chip.classList.toggle('selected');chip.classList.toggle('removed');updateWordCount();};
     grid.appendChild(chip);
   });
   updateWordCount();
 }
 
 function updateWordCount() {
-  const count = document.querySelectorAll('#wordGrid .word-chip.selected').length;
-  document.getElementById('selectedCount').textContent = count;
+  document.getElementById('selectedCount').textContent=document.querySelectorAll('#wordGrid .word-chip.selected').length;
 }
 
-// ===== START PRACTICE =====
+// ===== WORKFLOW PRACTICE (original typing game) =====
 function startPractice() {
-  const selected = [...document.querySelectorAll('#wordGrid .word-chip.selected')]
-    .map(el => extractedWords[parseInt(el.dataset.index)]);
-  if (selected.length === 0) { alert('Please select at least one word'); return; }
+  const selected=[...document.querySelectorAll('#wordGrid .word-chip.selected')].map(el=>extractedWords[parseInt(el.dataset.index)]);
+  if(selected.length===0){alert('Select at least one word');return;}
+  wfWords=selected.sort(()=>Math.random()-0.5);
+  wfIndex=0;wfCorrect=0;wfTyped=0;wfCombo=0;wfMaxCombo=0;
 
-  // Shuffle
-  practiceWords = selected.sort(() => Math.random() - 0.5);
-
-  currentStep = 4;
-  updateSteps();
-
+  wfStep(4);
   document.getElementById('panel-review').classList.add('hidden');
   document.getElementById('panel-practice').classList.remove('hidden');
   document.getElementById('panel-complete').classList.add('hidden');
 
-  // Init practice
-  wordIndex = 0; correctCount = 0; totalTyped = 0; startTime = Date.now();
-  document.getElementById('typingInput').value = '';
-  document.getElementById('typingInput').focus();
-  document.getElementById('totalWords').textContent = practiceWords.length;
-  document.getElementById('currentWordNum').textContent = '1';
-  document.getElementById('accuracy').textContent = '100%';
-  document.getElementById('wpm').textContent = '0';
-  document.getElementById('feedback').textContent = '';
-
-  showWord();
-  document.getElementById('typingInput').oninput = checkTyping;
+  document.getElementById('wfAccuracy').textContent='100%';
+  document.getElementById('wfCombo').textContent='0';
+  document.getElementById('wfProgress').textContent=`1/${wfWords.length}`;
+  document.getElementById('wfTotal').textContent=wfWords.length;
+  document.getElementById('wfLearned').textContent='0';
+  document.getElementById('wfProgressFill').style.width='0%';
+  renderCurrentWFWord();
 }
 
-function showWord() {
-  if (wordIndex >= practiceWords.length) {
-    completePractice();
-    return;
+function renderCurrentWFWord() {
+  if(wfIndex>=wfWords.length){completeWFPractice();return;}
+  const w=wfWords[wfIndex];
+  document.getElementById('wfMeaning').textContent=w.zh;
+  document.getElementById('wfProgress').textContent=`${wfIndex+1}/${wfWords.length}`;
+  document.getElementById('wfProgressStatus').innerHTML=`Learned: <strong id="wfLearned">${wfIndex}</strong> / <strong id="wfTotal">${wfWords.length}</strong>`;
+  document.getElementById('wfProgressFill').style.width=(wfIndex/wfWords.length*100)+'%';
+  document.getElementById('wfLearned').textContent=wfIndex;
+
+  const display=document.getElementById('wfWordDisplay'); display.innerHTML='';
+  const chars=w.en.split('');
+  chars.forEach((c,i)=>{
+    const span=document.createElement('span'); span.className='char';
+    span.dataset.char=c; span.textContent=c;
+    if(i===0) span.classList.add('active');
+    display.appendChild(span);
+  });
+  document.getElementById('wfSoundBtn').disabled=false;
+  speakWord();
+}
+
+function speakWord() { if(wfIndex<wfWords.length) speak(wfWords[wfIndex].en); }
+
+let wfInputBuf='';
+document.addEventListener('keydown',function(e){
+  if(mode!=='workflow') return;
+  if(document.getElementById('panel-practice').classList.contains('hidden')) return;
+  if(e.key==='Enter'){wfSkipWord();return;}
+  if(e.key==='Backspace'){wfInputBuf=wfInputBuf.slice(0,-1);updateWFDisplay();e.preventDefault();return;}
+  if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    wfInputBuf+=e.key;updateWFDisplay();
+    if(wfInputBuf===wfWords[wfIndex].en) wfCorrectWord();
   }
-  currentWord = practiceWords[wordIndex].en;
-  document.getElementById('display').textContent = currentWord;
-  document.getElementById('currentWordNum').textContent = wordIndex + 1;
-  document.getElementById('typingInput').value = '';
-  document.getElementById('typingInput').classList.remove('wrong', 'correct-anim');
+});
+
+function updateWFDisplay() {
+  const word=wfWords[wfIndex].en;
+  const chars=document.querySelectorAll('#wfWordDisplay .char');
+  chars.forEach((c,i)=>{
+    c.classList.remove('correct','active');
+    if(i<wfInputBuf.length){
+      if(wfInputBuf[i]===word[i]) c.classList.add('correct');
+      else c.classList.add('correct'); // still show as typed
+    }
+    if(i===wfInputBuf.length) c.classList.add('active');
+  });
 }
 
-function checkTyping(e) {
-  const val = e.target.value.trim();
-  if (val === currentWord) {
-    correctCount++;
-    totalTyped++;
-    e.target.classList.add('correct-anim');
-    e.target.classList.remove('wrong');
-    document.getElementById('feedback').innerHTML = `<span style="color:var(--green)">✓ ${currentWord}</span>`;
-    wordIndex++;
-    setTimeout(showWord, 400);
-  } else if (currentWord.startsWith(val)) {
-    // partially correct
-  } else if (val.length >= currentWord.length) {
-    totalTyped++;
-    e.target.classList.add('wrong');
-    document.getElementById('feedback').innerHTML = `<span style="color:var(--red)">✗ Correct: ${currentWord}</span>`;
-    wordIndex++;
-    setTimeout(showWord, 600);
-  }
-  updateStats();
+function wfCorrectWord() {
+  wfCorrect++;wfCombo++;wfMaxCombo=Math.max(wfMaxCombo,wfCombo);
+  document.getElementById('wfCombo').textContent=wfCombo;
+  document.getElementById('wfAccuracy').textContent=Math.round(wfCorrect/(wfIndex+1)*100)+'%';
+  const display=document.getElementById('wfWordDisplay');
+  const chars=display.querySelectorAll('.char');
+  chars.forEach(c=>c.classList.add('correct'));
+  speakWord();
+  setTimeout(()=>{wfInputBuf='';wfIndex++;document.getElementById('wfLearned').textContent=wfIndex;document.getElementById('wfProgressFill').style.width=(wfIndex/wfWords.length*100)+'%';renderCurrentWFWord();},500);
 }
 
-function updateStats() {
-  const acc = totalTyped > 0 ? Math.round(correctCount / totalTyped * 100) : 100;
-  const elapsed = (Date.now() - startTime) / 60000;
-  const wpm = elapsed > 0 ? Math.round(correctCount / elapsed) : 0;
-  document.getElementById('accuracy').textContent = acc + '%';
-  document.getElementById('wpm').textContent = wpm;
+function wfSkipWord() {
+  wfCombo=0;document.getElementById('wfCombo').textContent='0';
+  wfInputBuf='';wfIndex++;
+  document.getElementById('wfLearned').textContent=wfIndex;
+  document.getElementById('wfProgressFill').style.width=(wfIndex/wfWords.length*100)+'%';
+  renderCurrentWFWord();
 }
 
-function completePractice() {
+function completeWFPractice() {
   document.getElementById('panel-practice').classList.add('hidden');
   document.getElementById('panel-complete').classList.remove('hidden');
-  const acc = totalTyped > 0 ? Math.round(correctCount / totalTyped * 100) : 100;
-  const elapsed = (Date.now() - startTime) / 60000;
-  const wpm = elapsed > 0 ? Math.round(correctCount / elapsed) : 0;
-  document.getElementById('finalAccuracy').textContent = acc + '%';
-  document.getElementById('finalWPM').textContent = wpm;
-  document.getElementById('finalWords').textContent = practiceWords.length;
+  document.getElementById('wfFinalAcc').textContent=Math.round(wfCorrect/Math.max(1,wfIndex)*100)+'%';
+  document.getElementById('wfFinalCombo').textContent=wfMaxCombo;
+  document.getElementById('wfFinalWords').textContent=wfWords.length;
+}
+
+// ===== WORKFLOW STEPS UI =====
+function wfStep(n) {
+  for(let i=1;i<=4;i++){
+    const s=document.getElementById('step'+i);s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');if(i===n)s.classList.add('active');
+  }
+  for(let i=1;i<=3;i++) document.getElementById('conn'+i).classList.toggle('done',i<n);
 }
 
 function resetWorkflow() {
-  currentStep = 1;
-  extractedWords = []; practiceWords = []; fileData = null;
-  updateSteps();
-  ['panel-upload'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-  ['panel-extracting','panel-review','panel-practice','panel-complete'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById('previewImg').style.display = 'none';
-  document.getElementById('wordGrid').innerHTML = '';
-  // Remove error boxes
-  document.querySelectorAll('.error-box').forEach(el => el.remove());
+  wfStep(1);extractedWords=[];wfWords=[];fileData=null;wfIndex=0;wfCorrect=0;wfTyped=0;wfCombo=0;wfMaxCombo=0;wfInputBuf='';
+  ['panel-upload'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+  ['panel-extracting','panel-review','panel-practice','panel-complete'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('wordGrid').innerHTML='';
+  document.querySelectorAll('.error-box').forEach(e=>e.remove());
 }
 
-// ===== STEPS UI =====
-function updateSteps() {
-  for (let i = 1; i <= 4; i++) {
-    const step = document.getElementById('step' + i);
-    step.classList.remove('active', 'done');
-    if (i < currentStep) step.classList.add('done');
-    if (i === currentStep) step.classList.add('active');
-  }
-  for (let i = 1; i <= 3; i++) {
-    const conn = document.getElementById('conn' + i);
-    conn.classList.toggle('done', i < currentStep);
-  }
-}
-
-// ===== API KEY / GRADE =====
-function saveKey() {
-  localStorage.setItem('vocab_ds_key', document.getElementById('apiKey').value);
-}
-function saveGrade() {
-  localStorage.setItem('vocab_grade', document.getElementById('gradeLevel').value);
-}
-
-// Load saved
-(function() {
-  const key = localStorage.getItem('vocab_ds_key');
-  if (key) document.getElementById('apiKey').value = key;
-  const grade = localStorage.getItem('vocab_grade');
-  if (grade) document.getElementById('gradeLevel').value = grade;
+// ===== API KEY =====
+function saveKey(){localStorage.setItem('vocab_ds_key',document.getElementById('apiKey').value);}
+function saveGrade(){localStorage.setItem('vocab_grade',document.getElementById('gradeLevel').value);}
+(function(){
+  const k=localStorage.getItem('vocab_ds_key');if(k)document.getElementById('apiKey').value=k;
+  const g=localStorage.getItem('vocab_grade');if(g)document.getElementById('gradeLevel').value=g;
 })();
 
-// ===== DIRECT PRACTICE =====
+// ===== DIRECT PRACTICE (original DSE mode) =====
 const DSE_VOCAB = {
-  dse3a: ['abandon','ability','abroad','absence','absolute','absorb','abstract','abundant','academic','accelerate','accept','access','accompany','accomplish','account','accurate','accuse','achieve','acknowledge','acquire','adapt','adequate','adjust','administration','admire','admit','adopt','advance','advantage','advertise','affair','affect','afford','aggressive','agriculture','allocate','alternative','amateur','ambition','analyse','ancestor','anniversary','annual','anticipate','anxiety','apparent','appeal','appetite','appliance','application'],
-  dse3b: ['appoint','appreciate','approach','appropriate','approve','arise','arrange','artificial','aspect','assemble','assess','assign','assist','associate','assume','atmosphere','attach','attain','attempt','attend','attitude','attract','audience','authority','available','average','avoid','aware','balance','barrier','behalf','behave','belong','benefit','blame','border','broadcast','budget','burden','campaign','capable','capacity','capture','career','category','celebrate','challenge','channel','chapter'],
-  dse4a: ['characteristic','charity','chemical','circumstance','civil','claim','classify','climate','collapse','colleague','colonial','command','comment','commerce','commit','communicate','community','companion','comparison','compensate','compete','complaint','complex','component','compose','comprehensive','concentrate','concept','concern','conclude','condition','conduct','conference','confidence','confirm','conflict','confront','congress','connection','conscious','consequence','conservative','consider','consistent','constant','constitution','construct','consult','consume'],
-  dse4b: ['contact','contemporary','content','contest','context','contract','contribute','controversy','convenience','convention','convey','convince','cooperate','core','corporate','correspond','council','counter','couple','courage','create','credit','crime','crisis','criterion','critical','crucial','cultivate','culture','curiosity','current','curriculum','damage','debate','decade','decline','decorate','defend','define','definitely','deliberate','deliver','democracy','demonstrate','depart','depend','deposit','depress','derive','describe'],
+  dse3a: [{en:"animation",zh:"动画片"},{en:"action film",zh:"动作片"},{en:"adventure film",zh:"冒险片"},{en:"fantasy film",zh:"奇幻片"},{en:"comedy",zh:"喜剧片"},{en:"horror film",zh:"恐怖片"},{en:"mystery film",zh:"悬疑片"},{en:"musical",zh:"歌舞片"},{en:"romance",zh:"爱情片"},{en:"superhero film",zh:"超级英雄电影"},{en:"documentary",zh:"纪录片"},{en:"science fiction film",zh:"科幻片"},{en:"genre",zh:"类型"},{en:"cinematography",zh:"电影摄影"},{en:"costume",zh:"戏服、服装"},{en:"make-up",zh:"妆容"},{en:"cast",zh:"全体演员"},{en:"director",zh:"导演"},{en:"screenplay",zh:"剧本"},{en:"plot",zh:"剧情"},{en:"setting",zh:"故事背景"},{en:"villain",zh:"反派"},{en:"premiere",zh:"首映"},{en:"imagery",zh:"影像"},{en:"visual effects",zh:"视觉特效"}],
+  dse3b: [{en:"edit",zh:"剪辑"},{en:"stunning",zh:"惊艳的"},{en:"hilarious",zh:"爆笑的"},{en:"touching",zh:"感人的"},{en:"thrilling",zh:"惊险刺激的"},{en:"gorgeous",zh:"华丽的"},{en:"charity",zh:"慈善"},{en:"volunteer",zh:"志愿者"},{en:"donation",zh:"捐赠"},{en:"marathon",zh:"马拉松"},{en:"bazaar",zh:"义卖集市"},{en:"sponsored run",zh:"公益募捐跑"},{en:"obstacle race",zh:"障碍赛"},{en:"raffle",zh:"抽奖"},{en:"bake sale",zh:"烘焙义卖"},{en:"fund",zh:"资金"},{en:"raise money",zh:"筹钱"},{en:"shelter",zh:"收容所"},{en:"homeless",zh:"无家可归的"},{en:"elderly",zh:"老人"},{en:"compassion",zh:"同情心"},{en:"counselling",zh:"咨询服务"},{en:"campaign",zh:"公益活动"},{en:"generosity",zh:"慷慨"},{en:"participate",zh:"参与"}],
+  dse4a: [{en:"innovate",zh:"创新"},{en:"groundbreaking",zh:"开创性的"},{en:"acclaim",zh:"称赞"},{en:"prolific",zh:"多产的"},{en:"patent",zh:"专利"},{en:"legacy",zh:"遗产、成就"},{en:"brainstorm",zh:"头脑风暴"},{en:"experiment",zh:"实验"},{en:"verify",zh:"验证"},{en:"theory",zh:"理论"},{en:"notion",zh:"想法"},{en:"visualize",zh:"构想"},{en:"tweak",zh:"微调"},{en:"rule out",zh:"排除"},{en:"think outside the box",zh:"跳出思维定式"},{en:"renewable energy",zh:"可再生能源"},{en:"discovery",zh:"发现"},{en:"revolutionize",zh:"彻底变革"},{en:"acrobat",zh:"杂技演员"},{en:"magician",zh:"魔术师"},{en:"illusionist",zh:"幻术师"},{en:"ventriloquist",zh:"腹语表演者"},{en:"opera",zh:"歌剧"},{en:"abstract",zh:"抽象的"},{en:"abundant",zh:"丰富的"}],
+  dse4b: [{en:"academic",zh:"学术的"},{en:"accelerate",zh:"加速"},{en:"accomplish",zh:"完成"},{en:"acknowledge",zh:"承认"},{en:"acquire",zh:"获得"},{en:"adapt",zh:"适应"},{en:"adequate",zh:"充足的"},{en:"administration",zh:"管理"},{en:"adopt",zh:"采用"},{en:"advance",zh:"前进"},{en:"advantage",zh:"优势"},{en:"aggressive",zh:"侵略的"},{en:"allocate",zh:"分配"},{en:"alternative",zh:"替代的"},{en:"ambition",zh:"野心"},{en:"analyse",zh:"分析"},{en:"ancestor",zh:"祖先"},{en:"annual",zh:"年度的"},{en:"anticipate",zh:"预期"},{en:"anxiety",zh:"焦虑"},{en:"apparent",zh:"明显的"},{en:"appeal",zh:"呼吁"},{en:"appetite",zh:"胃口"},{en:"application",zh:"应用"},{en:"approach",zh:"方法"}],
 };
 
+let dWords=[],dIndex=0,dCorrect=0,dCombo=0,dMaxCombo=0,dInputBuf='';
+
 function loadVocabSet() {
-  const set = document.getElementById('vocabSet').value;
-  if (set === 'custom') {
-    const custom = prompt('Paste your words (comma or newline separated):');
-    if (custom) dWords = custom.split(/[,\n]+/).map(w => w.trim()).filter(Boolean);
-  } else if (DSE_VOCAB[set]) {
-    dWords = [...DSE_VOCAB[set]].sort(() => Math.random() - 0.5);
+  const set=document.getElementById('vocabSet').value;
+  if(DSE_VOCAB[set]) dWords=[...DSE_VOCAB[set]].sort(()=>Math.random()-0.5);
+  dIndex=0;dCorrect=0;dCombo=0;dMaxCombo=0;dInputBuf='';
+  document.getElementById('dTotal').textContent=dWords.length;
+  document.getElementById('dLearned').textContent='0';
+  document.getElementById('dAccuracy').textContent='100%';
+  document.getElementById('dCombo').textContent='0';
+  document.getElementById('dProgress').textContent=`1/${dWords.length}`;
+  document.getElementById('dProgressFill').style.width='0%';
+  if(dWords.length>0) renderDWord();
+}
+
+function renderDWord() {
+  if(dIndex>=dWords.length){dIndex=0;dCorrect=0;dCombo=0;loadVocabSet();return;}
+  const w=dWords[dIndex];
+  document.getElementById('dMeaning').textContent=w.zh;
+  document.getElementById('dProgress').textContent=`${dIndex+1}/${dWords.length}`;
+  document.getElementById('dProgressStatus').innerHTML=`Learned: <strong>${dIndex}</strong> / <strong>${dWords.length}</strong>`;
+  document.getElementById('dProgressFill').style.width=(dIndex/dWords.length*100)+'%';
+  document.getElementById('dLearned').textContent=dIndex;
+  const display=document.getElementById('dWordDisplay'); display.innerHTML='';
+  w.en.split('').forEach((c,i)=>{
+    const span=document.createElement('span'); span.className='char';
+    span.dataset.char=c; span.textContent=c;
+    if(i===0) span.classList.add('active');
+    display.appendChild(span);
+  });
+  document.getElementById('dSoundBtn').disabled=false;
+  speakDWord();
+}
+
+function speakDWord(){if(dIndex<dWords.length)speak(dWords[dIndex].en);}
+
+document.addEventListener('keydown',function(e){
+  if(mode!=='practice') return;
+  if(document.getElementById('practiceView').classList.contains('hidden')) return;
+  if(e.key==='Enter'){dSkipWord();return;}
+  if(e.key==='Backspace'){dInputBuf=dInputBuf.slice(0,-1);updateDDisplay();e.preventDefault();return;}
+  if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    dInputBuf+=e.key;updateDDisplay();
+    if(dInputBuf===dWords[dIndex].en) dCorrectWord();
   }
-  dIndex = 0; dCorrect = 0; dTyped = 0;
-  document.getElementById('dTotal').textContent = dWords.length;
-  document.getElementById('dCurrent').textContent = dWords.length > 0 ? '1' : '0';
-  document.getElementById('dAccuracy').textContent = '100%';
-  document.getElementById('dWpm').textContent = '0';
-  document.getElementById('dFeedback').textContent = '';
-  dStart = Date.now();
-  if (dWords.length > 0) showDWord();
-  document.getElementById('dInput').oninput = checkDTyping;
+});
+
+function updateDDisplay() {
+  const word=dWords[dIndex].en;
+  const chars=document.querySelectorAll('#dWordDisplay .char');
+  chars.forEach((c,i)=>{
+    c.classList.remove('correct','active');
+    if(i<dInputBuf.length) c.classList.add('correct');
+    if(i===dInputBuf.length) c.classList.add('active');
+  });
 }
 
-function showDWord() {
-  if (dIndex >= dWords.length) { dIndex = 0; dCorrect = 0; dTyped = 0; dStart = Date.now(); }
-  currentWord = dWords[dIndex];
-  document.getElementById('dDisplay').textContent = currentWord;
-  document.getElementById('dCurrent').textContent = dIndex + 1;
-  document.getElementById('dInput').value = '';
-  document.getElementById('dInput').classList.remove('wrong', 'correct-anim');
-}
+function dCorrectWord(){dCorrect++;dCombo++;dMaxCombo=Math.max(dMaxCombo,dCombo);document.getElementById('dCombo').textContent=dCombo;document.getElementById('dAccuracy').textContent=Math.round(dCorrect/(dIndex+1)*100)+'%';document.querySelectorAll('#dWordDisplay .char').forEach(c=>c.classList.add('correct'));speakDWord();setTimeout(()=>{dInputBuf='';dIndex++;document.getElementById('dLearned').textContent=dIndex;document.getElementById('dProgressFill').style.width=(dIndex/dWords.length*100)+'%';renderDWord();},400);}
+function dSkipWord(){dCombo=0;document.getElementById('dCombo').textContent='0';dInputBuf='';dIndex++;document.getElementById('dLearned').textContent=dIndex;document.getElementById('dProgressFill').style.width=(dIndex/dWords.length*100)+'%';renderDWord();}
 
-function checkDTyping(e) {
-  const val = e.target.value.trim();
-  if (val === currentWord) { dCorrect++; dTyped++; e.target.classList.add('correct-anim'); dIndex++; setTimeout(showDWord, 400); }
-  else if (val.length >= currentWord.length) { dTyped++; e.target.classList.add('wrong'); dIndex++; setTimeout(showDWord, 600); }
-  const acc = dTyped > 0 ? Math.round(dCorrect / dTyped * 100) : 100;
-  const elapsed = (Date.now() - dStart) / 60000;
-  const wpm = elapsed > 0 ? Math.round(dCorrect / elapsed) : 0;
-  document.getElementById('dAccuracy').textContent = acc + '%';
-  document.getElementById('dWpm').textContent = wpm;
-}
+// Init
+loadVocabSet();
 </script>
 </body>
 </html>
