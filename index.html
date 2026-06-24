@@ -1,754 +1,709 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSE 3A 词汇打字练习 - Qwerty Style</title>
-    <style>
-        :root {
-            --bg-color: #1f2937;
-            --text-main: #f3f4f6;
-            --text-sub: #9ca3af;
-            --accent: #818cf8;
-            --correct: #34d399;
-            --error: #f87171;
-            --cursor: #60a5fa;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VocabExercises — AI-Powered Vocabulary Workflow</title>
+<style>
+:root {
+  --bg: #0f172a; --surf: #1e293b; --surf2: #334155;
+  --text: #f1f5f9; --text2: #94a3b8; --accent: #818cf8;
+  --green: #34d399; --red: #f87171; --amber: #fbbf24;
+  --radius: 12px;
+}
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            user-select: none;
-        }
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  min-height:100vh; overflow-x:hidden;
+}
 
-        /* 顶部状态栏 */
-        .stats-bar {
-            position: absolute;
-            top: 2rem;
-            display: flex;
-            gap: 2rem;
-            color: var(--text-sub);
-            font-size: 0.9rem;
-        }
+/* ===== LAYOUT ===== */
+.app { max-width:960px; margin:0 auto; padding:28px 20px 60px; }
 
-        .stat-item span {
-            color: var(--accent);
-            font-weight: bold;
-        }
+/* ===== HEADER ===== */
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; flex-wrap:wrap; gap:16px; }
+.header h1 { font-size:22px; font-weight:700; letter-spacing:-0.3px; }
+.header h1 span { color:var(--accent); }
+.mode-tabs { display:flex; gap:4px; background:var(--surf); border-radius:24px; padding:3px; }
+.mode-tab {
+  padding:8px 20px; border-radius:22px; font-size:13px; font-weight:600;
+  cursor:pointer; border:none; background:transparent; color:var(--text2);
+  transition:all .2s;
+}
+.mode-tab.active { background:var(--accent); color:#fff; }
 
-        /* 词汇书切换下拉菜单 */
-        .vocab-selector {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
+/* ===== WORKFLOW PANEL ===== */
+.panel {
+  background: var(--surf); border-radius:var(--radius); padding:32px;
+  margin-bottom:24px; border:1px solid var(--surf2);
+}
 
-        .vocab-selector label {
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
+/* ===== WORKFLOW STEPS ===== */
+.wf-steps { display:flex; gap:0; margin-bottom:28px; align-items:center; }
+.wf-step {
+  display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text2);
+  flex:1; position:relative;
+}
+.wf-step .num {
+  width:26px; height:26px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:12px; font-weight:700;
+  background:var(--surf2); color:var(--text2); flex-shrink:0;
+}
+.wf-step.active .num { background:var(--accent); color:#fff; }
+.wf-step.done .num { background:var(--green); color:#0f172a; }
+.wf-step .label { white-space:nowrap; font-weight:500; }
+.wf-step.active .label { color:var(--text); font-weight:600; }
+.wf-step.done .label { color:var(--green); }
+.wf-connector { flex:1; height:2px; background:var(--surf2); margin:0 8px; min-width:20px; }
+.wf-connector.done { background:var(--green); }
 
-        .vocab-selector select {
-            padding: 0.5rem 0.8rem;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 0.4rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            transition: all 0.2s;
-        }
+/* ===== UPLOAD ZONE ===== */
+.upload-zone {
+  border:2px dashed var(--surf2); border-radius:var(--radius);
+  padding:48px 24px; text-align:center; cursor:pointer;
+  transition:all .2s; position:relative;
+}
+.upload-zone:hover { border-color:var(--accent); background:rgba(129,140,248,.04); }
+.upload-zone.dragover { border-color:var(--accent); background:rgba(129,140,248,.08); }
+.upload-icon { font-size:40px; margin-bottom:12px; }
+.upload-zone h3 { font-size:16px; margin-bottom:6px; }
+.upload-zone p { font-size:13px; color:var(--text2); }
+.upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-zone .hint { margin-top:12px; font-size:11px; color:var(--text2); }
+.preview-img { max-width:100%; max-height:240px; border-radius:8px; margin-top:16px; display:none; }
 
-        .vocab-selector select:hover {
-            background-color: #6d28d9;
-        }
+/* ===== LOADING ===== */
+.loading-box { text-align:center; padding:40px 20px; }
+.spinner {
+  width:36px; height:36px; border:3px solid var(--surf2);
+  border-top-color:var(--accent); border-radius:50%;
+  animation:spin .8s linear infinite; margin:0 auto 16px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
 
-        .vocab-selector select:focus {
-            outline: 2px solid var(--cursor);
-            outline-offset: 2px;
-        }
+/* ===== WORD LIST ===== */
+.word-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin:16px 0; }
+.word-chip {
+  background:var(--surf2); border-radius:8px; padding:10px 14px;
+  display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; transition:all .15s; font-size:14px;
+  border:2px solid transparent; user-select:none;
+}
+.word-chip:hover { background:#3b4455; }
+.word-chip.selected { border-color:var(--accent); background:rgba(129,140,248,.12); }
+.word-chip.removed { opacity:.25; text-decoration:line-through; }
+.word-chip .ch { font-size:16px; font-weight:600; }
+.word-chip .en { font-size:12px; color:var(--text2); }
 
-        /* 主游戏区 */
-        .container {
-            text-align: center;
-            position: relative;
-            padding: 2rem;
-            max-width: 800px;
-        }
+/* ===== BUTTONS ===== */
+.btn {
+  display:inline-flex; align-items:center; gap:6px; padding:10px 24px;
+  border-radius:24px; font-size:14px; font-weight:600; cursor:pointer;
+  border:none; transition:all .2s; text-decoration:none;
+}
+.btn-pri { background:var(--accent); color:#fff; }
+.btn-pri:hover { background:#6366f1; transform:translateY(-1px); }
+.btn-pri:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+.btn-sec { background:var(--surf2); color:var(--text); }
+.btn-sec:hover { background:#475569; }
+.btn-row { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
 
-        /* 中文释义 */
-        #meaning-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 3rem;
-            color: var(--text-main);
-            min-height: 3.5rem;
-        }
+/* ===== AI SETTINGS ===== */
+.api-config {
+  display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;
+}
+.api-config label { font-size:13px; color:var(--text2); }
+.api-config input, .api-config select {
+  background:var(--surf2); border:1px solid var(--surf2); color:var(--text);
+  padding:8px 12px; border-radius:8px; font-size:13px; width:100%; max-width:300px;
+}
+.api-config input:focus { border-color:var(--accent); outline:none; }
+.grade-select { max-width:200px !important; }
 
-        /* 单词显示区 */
-        #word-display {
-            font-size: 3.5rem;
-            letter-spacing: 0.5rem;
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
+/* ===== SECTION HEADER ===== */
+.sec-title { font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
 
-        /* 单个字母/下划线样式 */
-        .char {
-            border-bottom: 4px solid var(--text-sub);
-            min-width: 2rem;
-            height: 4.5rem;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            color: transparent;
-            transition: all 0.1s;
-        }
+/* Error / notice */
+.notice { background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--amber); margin:16px 0; }
+.error-box { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25); border-radius:8px; padding:12px 16px; font-size:13px; color:var(--red); margin:16px 0; }
 
-        /* 空格字符特殊显示 */
-        .char[data-char=" "] {
-            min-width: 1rem;
-            background-color: rgba(129, 140, 248, 0.1);
-        }
+/* ===== TYPING PRACTICE (EXISTING) ===== */
+.practice-area { display:none; }
+.practice-area.active { display:block; }
 
-        .char[data-char=" "]::after {
-            content: "⎵";
-            color: var(--text-sub);
-            font-size: 1rem;
-            opacity: 0.5;
-        }
+.stats-bar { display:flex; gap:24px; margin-bottom:20px; flex-wrap:wrap; }
+.stat-item span { color:var(--accent); font-weight:bold; }
 
-        /* 已输入正确的字母 */
-        .char.correct {
-            color: var(--text-main);
-            border-bottom-color: var(--correct);
-            animation: pop 0.1s ease;
-        }
+.display { text-align:center; font-size:64px; font-weight:700; padding:40px 20px; min-height:120px; display:flex; align-items:center; justify-content:center; }
+.input-area { text-align:center; }
+.input-area input {
+  background:var(--surf2); border:2px solid var(--surf2); color:var(--text);
+  padding:14px 20px; border-radius:12px; font-size:22px; width:280px; max-width:90vw;
+  text-align:center; font-family:inherit; transition:border-color .2s;
+}
+.input-area input:focus { border-color:var(--accent); outline:none; }
+.input-area input.wrong { border-color:var(--red); }
+.input-area input.correct-anim { border-color:var(--green); }
 
-        /* 当前光标位置 */
-        .char.active {
-            border-bottom-color: var(--cursor);
-        }
+.word-counter { text-align:center; margin-top:20px; font-size:13px; color:var(--text2); }
+.word-counter span { color:var(--accent); font-weight:700; }
+.feedback { text-align:center; margin-top:12px; font-size:14px; min-height:24px; }
+.stats-final { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin:24px 0; }
+.stats-final .big-stat { text-align:center; }
+.stats-final .big-stat .val { font-size:36px; font-weight:800; color:var(--accent); }
+.stats-final .big-stat .lbl { font-size:12px; color:var(--text2); }
 
-        /* 错误时的动画 */
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
+.back-btn { margin-top:16px; }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
+/* ===== RESPONSIVE ===== */
+@media (max-width:640px) {
+  .header { flex-direction:column; align-items:flex-start; }
+  .display { font-size:40px; padding:24px 16px; }
+  .word-grid { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); }
+  .wf-steps { flex-wrap:wrap; gap:8px; }
+  .wf-connector { display:none; }
+}
 
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        /* 提示信息 */
-        .hint {
-            margin-top: 3rem;
-            color: var(--text-sub);
-            font-size: 0.8rem;
-            opacity: 0.6;
-        }
-
-        /* 语音按钮 */
-        .sound-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.5rem;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .sound-btn:hover {
-            background-color: #6d28d9;
-            transform: scale(1.05);
-        }
-
-        .sound-btn:active {
-            transform: scale(0.98);
-        }
-
-        .sound-btn:disabled {
-            background-color: #6b7280;
-            cursor: not-allowed;
-            transform: scale(1);
-        }
-
-        /* 完成界面 */
-        .finish-screen {
-            display: none;
-            text-align: center;
-        }
-
-        .finish-screen.show {
-            display: block;
-        }
-
-        .finish-screen h1 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: var(--correct);
-        }
-
-        .finish-stats {
-            font-size: 1.2rem;
-            margin: 1rem 0;
-            color: var(--text-sub);
-        }
-
-        .finish-stats strong {
-            color: var(--accent);
-        }
-
-        .restart-btn {
-            margin-top: 2rem;
-            padding: 0.8rem 2rem;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .restart-btn:hover {
-            background-color: #6d28d9;
-        }
-
-        /* 进度条 */
-        .progress-info {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            background-color: rgba(31, 41, 55, 0.9);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--accent);
-            color: var(--text-sub);
-            font-size: 0.85rem;
-            max-width: 200px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background-color: var(--text-sub);
-            border-radius: 3px;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: var(--accent);
-            transition: width 0.3s ease;
-        }
-
-    </style>
+.hidden { display:none !important; }
+</style>
 </head>
 <body>
 
-    <div class="stats-bar">
-        <div class="stat-item">进度: <span id="progress">0/0</span></div>
-        <div class="stat-item">正确率: <span id="accuracy">100%</span></div>
-        <div class="stat-item">连击: <span id="combo">0</span></div>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Vocab<span>Exercises</span></h1>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="switchMode('workflow')" id="tab-workflow">Workflow</button>
+      <button class="mode-tab" onclick="switchMode('practice')" id="tab-practice">Quick Practice</button>
+    </div>
+  </div>
+
+  <!-- ===== WORKFLOW MODE ===== -->
+  <div id="workflowView">
+
+    <!-- Step indicator -->
+    <div class="wf-steps">
+      <div class="wf-step active" id="step1">
+        <span class="num">1</span><span class="label">Upload</span>
+      </div>
+      <div class="wf-connector" id="conn1"></div>
+      <div class="wf-step" id="step2">
+        <span class="num">2</span><span class="label">AI Extract</span>
+      </div>
+      <div class="wf-connector" id="conn2"></div>
+      <div class="wf-step" id="step3">
+        <span class="num">3</span><span class="label">Review Words</span>
+      </div>
+      <div class="wf-connector" id="conn3"></div>
+      <div class="wf-step" id="step4">
+        <span class="num">4</span><span class="label">Practice</span>
+      </div>
     </div>
 
-    <div class="vocab-selector">
-        <label for="vocab-book">词汇书:</label>
-        <select id="vocab-book">
-            <option value="coreVocab3a">3A 核心词汇</option>
-        </select>
+    <!-- STEP 1: Upload -->
+    <div class="panel" id="panel-upload">
+      <div class="sec-title">Step 1: Upload Your Study Material</div>
+      <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon">📸</div>
+        <h3>Click or drag to upload</h3>
+        <p>Screenshot of textbook, notes, or past paper</p>
+        <p class="hint">Supports: JPG · PNG · WebP · PDF (max 10MB)</p>
+        <input type="file" id="fileInput" accept="image/*,.pdf" onchange="handleFile(event)">
+      </div>
+      <img class="preview-img" id="previewImg" alt="Preview">
     </div>
 
-    <div class="progress-info">
-        <div id="progress-status">已学: <strong id="learned-count">0</strong> / <strong id="total-count">0</strong></div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+    <!-- STEP 2: Extracting (shown after upload) -->
+    <div class="panel hidden" id="panel-extracting">
+      <div class="loading-box">
+        <div class="spinner"></div>
+        <h3>AI is analyzing your material...</h3>
+        <p style="color:var(--text2);margin-top:8px;font-size:14px;">Extracting vocabulary · Filtering by your level · Building word list</p>
+      </div>
+    </div>
+
+    <!-- STEP 3: Review Words -->
+    <div class="panel hidden" id="panel-review">
+      <div class="sec-title">Step 3: Review Your Word List</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+        Click a word to remove it. Only words you keep will be added to your practice.
+      </p>
+      <div class="word-grid" id="wordGrid"></div>
+      <div style="font-size:13px;color:var(--text2);margin-top:8px;" id="wordCount">
+        <span id="selectedCount">0</span> words selected
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-pri" onclick="startPractice()" id="btnStartPractice">
+          Start Practice
+        </button>
+        <button class="btn btn-sec" onclick="resetWorkflow()">Back to Upload</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Practice -->
+    <div class="panel hidden" id="panel-practice">
+      <div class="practice-area active">
+        <div class="stats-bar">
+          <div class="stat-item">Accuracy: <span id="accuracy">100%</span></div>
+          <div class="stat-item">WPM: <span id="wpm">0</span></div>
         </div>
+        <div class="display" id="display"></div>
+        <div class="input-area">
+          <input type="text" id="typingInput" placeholder="Type the word..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="word-counter">
+          <span id="currentWordNum">1</span> / <span id="totalWords">0</span>
+        </div>
+        <div class="btn-row" style="justify-content:center;">
+          <button class="btn btn-sec back-btn" onclick="resetWorkflow()">← Back</button>
+        </div>
+      </div>
     </div>
 
-    <div class="container" id="game-container">
-        <button id="sound-btn" class="sound-btn" title="点击重复发音">🔊 发音</button>
-        <div id="meaning-display">加载中...</div>
-        <div id="word-display"></div>
+    <!-- Practice Completed -->
+    <div class="panel hidden" id="panel-complete">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+        <h2>Practice Complete!</h2>
+        <div class="stats-final" style="margin:24px 0;">
+          <div class="big-stat"><div class="val" id="finalAccuracy">-</div><div class="lbl">Accuracy</div></div>
+          <div class="big-stat"><div class="val" id="finalWPM">-</div><div class="lbl">WPM</div></div>
+          <div class="big-stat"><div class="val" id="finalWords">-</div><div class="lbl">Words Practiced</div></div>
+        </div>
+        <div class="btn-row" style="justify-content:center;">
+          <button class="btn btn-pri" onclick="resetWorkflow()">New Material</button>
+        </div>
+      </div>
     </div>
 
-    <div class="hint">
-        直接通过键盘输入单词 • Enter 跳过 • Backspace 删除 • 词组中的空格也要输入
+    <!-- Settings -->
+    <div class="panel" style="margin-top:16px; padding:20px 24px;">
+      <details>
+        <summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);">AI Settings</summary>
+        <div class="api-config" style="margin-top:12px;">
+          <label>DeepSeek API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." onchange="saveKey()">
+          <label>Grade Level</label>
+          <select class="grade-select" id="gradeLevel" onchange="saveGrade()">
+            <option value="DSE">DSE (Senior Secondary)</option>
+            <option value="S3">S1–S3 (Junior Secondary)</option>
+            <option value="P6">P4–P6 (Upper Primary)</option>
+            <option value="P3">P1–P3 (Lower Primary)</option>
+            <option value="IELTS">IELTS / Academic</option>
+            <option value="auto">Auto-detect from text</option>
+          </select>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px;">
+          Get a free API key at <a href="https://platform.deepseek.com" target="_blank" style="color:var(--accent);">platform.deepseek.com</a>.
+          Your key is stored locally and never sent anywhere except DeepSeek's API.
+        </p>
+      </details>
     </div>
+  </div>
 
-    <div class="finish-screen" id="finish-screen">
-        <h1>🎉 练习完成！</h1>
-        <div class="finish-stats">总单词数: <strong id="total-words">0</strong></div>
-        <div class="finish-stats">正确率: <strong id="final-accuracy">100%</strong></div>
-        <div class="finish-stats">最高连击: <strong id="max-combo">0</strong></div>
-        <div class="finish-stats">进度已保存: <strong id="progress-saved">0/0</strong></div>
-        <button class="restart-btn" onclick="location.reload()">继续练习</button>
-        <button class="restart-btn" style="background-color: #34d399; margin-left: 1rem;" onclick="resetProgress()">重新开始</button>
+  <!-- ===== DIRECT PRACTICE MODE (existing vocab books) ===== -->
+  <div id="practiceView" class="hidden">
+    <div class="panel">
+      <div class="sec-title">Quick Practice — Pre-built Word Lists</div>
+      <div class="api-config">
+        <label>Vocabulary Set:</label>
+        <select id="vocabSet" onchange="loadVocabSet()">
+          <option value="dse3a">DSE 3A</option>
+          <option value="dse3b">DSE 3B</option>
+          <option value="dse4a">DSE 4A</option>
+          <option value="dse4b">DSE 4B</option>
+          <option value="custom">Custom List</option>
+        </select>
+      </div>
+      <div class="practice-area active" id="directPractice">
+        <div class="stats-bar">
+          <div class="stat-item">Accuracy: <span id="dAccuracy">100%</span></div>
+          <div class="stat-item">WPM: <span id="dWpm">0</span></div>
+        </div>
+        <div class="display" id="dDisplay"></div>
+        <div class="input-area">
+          <input type="text" id="dInput" placeholder="Type the word..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="feedback" id="dFeedback"></div>
+        <div class="word-counter">
+          <span id="dCurrent">1</span> / <span id="dTotal">0</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // === 多个词汇书数据 ===
-        const vocabularyBooks = {
-    
-            coreVocab3a: [
-  { en: "animation", zh: "动画片" },
-  { en: "action film", zh: "动作片" },
-  { en: "adventure film", zh: "冒险片" },
-  { en: "fantasy film", zh: "奇幻片" },
-  { en: "comedy", zh: "喜剧片" },
-  { en: "horror film", zh: "恐怖片" },
-  { en: "mystery film", zh: "悬疑片" },
-  { en: "musical", zh: "歌舞片" },
-  { en: "romance", zh: "爱情片" },
-  { en: "superhero film", zh: "超级英雄电影" },
-  { en: "documentary", zh: "纪录片" },
-  { en: "science fiction film", zh: "科幻片" },
-  { en: "genre", zh: "类型" },
-  { en: "cinematography", zh: "电影摄影" },
-  { en: "costume", zh: "戏服、服装" },
-  { en: "make-up", zh: "妆容" },
-  { en: "cast", zh: "全体演员" },
-  { en: "director", zh: "导演" },
-  { en: "screenplay", zh: "剧本" },
-  { en: "plot", zh: "剧情" },
-  { en: "setting", zh: "故事背景" },
-  { en: "villain", zh: "反派" },
-  { en: "premiere", zh: "首映" },
-  { en: "imagery", zh: "影像" },
-  { en: "visual effects", zh: "视觉特效" },
-  { en: "edit", zh: "剪辑" },
-  { en: "stunning", zh: "惊艳的" },
-  { en: "hilarious", zh: "爆笑的" },
-  { en: "touching", zh: "感人的" },
-  { en: "thrilling", zh: "惊险刺激的" },
-  { en: "gorgeous", zh: "华丽的" },
-  { en: "charity", zh: "慈善" },
-  { en: "volunteer", zh: "志愿者；做志愿" },
-  { en: "donation", zh: "捐赠" },
-  { en: "marathon", zh: "马拉松" },
-  { en: "bazaar", zh: "义卖集市" },
-  { en: "sponsored run", zh: "公益募捐跑" },
-  { en: "obstacle race", zh: "障碍赛" },
-  { en: "raffle", zh: "抽奖" },
-  { en: "bake sale", zh: "烘焙义卖" },
-  { en: "fast", zh: "禁食募捐" },
-  { en: "fund", zh: "资金；筹款" },
-  { en: "raise money", zh: "筹钱" },
-  { en: "shelter", zh: "收容所" },
-  { en: "homeless", zh: "无家可归的" },
-  { en: "elderly", zh: "老人" },
-  { en: "compassion", zh: "同情心" },
-  { en: "counselling", zh: "咨询服务" },
-  { en: "campaign", zh: "公益活动" },
-  { en: "soup kitchen", zh: "施粥所" },
-  { en: "generosity", zh: "慷慨" },
-  { en: "participate", zh: "参与" },
-  { en: "innovate", zh: "创新" },
-  { en: "groundbreaking", zh: "开创性的" },
-  { en: "acclaim", zh: "称赞" },
-  { en: "prolific", zh: "多产的" },
-  { en: "patent", zh: "专利" },
-  { en: "legacy", zh: "遗产、成就" },
-  { en: "brainstorm", zh: "头脑风暴" },
-  { en: "experiment", zh: "实验" },
-  { en: "verify", zh: "验证" },
-  { en: "theory", zh: "理论" },
-  { en: "notion", zh: "想法" },
-  { en: "visualize", zh: "构想" },
-  { en: "tweak", zh: "微调" },
-  { en: "rule out", zh: "排除" },
-  { en: "think outside the box", zh: "跳出思维定式" },
-  { en: "renewable energy", zh: "可再生能源" },
-  { en: "discovery", zh: "发现" },
-  { en: "revolutionize", zh: "彻底变革" },
-  { en: "acrobat", zh: "杂技演员" },
-  { en: "escapologist", zh: "逃脱魔术师" },
-  { en: "magician", zh: "魔术师" },
-  { en: "illusionist", zh: "幻术师" },
-  { en: "ventriloquist", zh: "腹语表演者" },
-  { en: "opera", zh: "歌剧" },
-  { en: "orchestral", zh: "管弦乐的" },
-  { en: "stand-up comedy", zh: "脱口秀喜剧" },
-  { en: "puppet", zh: "木偶" },
-  { en: "trapeze artist", zh: "空中飞人表演者" },
-  { en: "rehearse", zh: "排练" },
-  { en: "intricate", zh: "精致繁复的" },
-  { en: "awe-inspiring", zh: "令人惊叹的" },
-  { en: "mesmerize", zh: "迷住" },
-  { en: "pretentious", zh: "浮夸做作的" },
-  { en: "edgy", zh: "前卫的" },
-  { en: "debut", zh: "首演" },
-  { en: "standing ovation", zh: "起立鼓掌" },
-  { en: "rave review", zh: "好评" },
-  { en: "stage presence", zh: "舞台气场" },
-  { en: "disengage", zh: "失去兴致" }
+</div>
+
+<script>
+// ===== STATE =====
+let mode = 'workflow';
+let currentStep = 1;
+let extractedWords = [];
+let practiceWords = [];
+let fileData = null;
+
+// Practice state
+let wordIndex = 0;
+let correctCount = 0;
+let totalTyped = 0;
+let startTime = 0;
+let currentWord = '';
+
+// Direct practice state
+let dIndex = 0; let dCorrect = 0; let dTyped = 0; let dStart = 0; let dWords = [];
+
+// ===== MODE SWITCHING =====
+function switchMode(m) {
+  mode = m;
+  document.getElementById('tab-workflow').classList.toggle('active', m === 'workflow');
+  document.getElementById('tab-practice').classList.toggle('active', m === 'practice');
+  document.getElementById('workflowView').classList.toggle('hidden', m !== 'workflow');
+  document.getElementById('practiceView').classList.toggle('hidden', m !== 'practice');
+  if (m === 'practice') {
+    loadVocabSet();
+  }
+}
+
+// ===== FILE UPLOAD =====
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  handleFile({ target: { files: e.dataTransfer.files } });
+});
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('File too large (max 10MB)'); return; }
+
+  // Show preview for images
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = document.getElementById('previewImg');
+      img.src = ev.target.result;
+      img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Convert file to base64
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fileData = { name: file.name, type: file.type, data: ev.target.result };
+    startExtraction();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== EXTRACTION =====
+async function startExtraction() {
+  currentStep = 2;
+  updateSteps();
+
+  document.getElementById('panel-upload').classList.add('hidden');
+  document.getElementById('panel-extracting').classList.remove('hidden');
+  document.getElementById('panel-review').classList.add('hidden');
+
+  const apiKey = localStorage.getItem('vocab_ds_key');
+  const grade = localStorage.getItem('vocab_grade') || 'auto';
+
+  if (!apiKey) {
+    // Demo mode — generate sample words for visual demo
+    await new Promise(r => setTimeout(r, 1500));
+    extractedWords = generateDemoWords();
+    showReviewPanel();
+    return;
+  }
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a vocabulary extraction assistant for English learners in Hong Kong.
+Given text from study materials, extract English vocabulary words that a ${grade}-level student should learn.
+For each word, provide: the word, its Chinese meaning, and a difficulty rating (1-5).
+Return ONLY a JSON array: [{"en":"word","zh":"meaning","diff":3},...].
+Extract 12-25 words. Focus on words useful for the student's level — not too easy, not too hard (ZPD principle).
+Ignore words the student almost certainly already knows at ${grade} level.`
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'Extract vocabulary words suitable for my level from this material. Give me only the JSON array.'
+              },
+              {
+                type: 'image_url',
+                image_url: { url: fileData.data }
+              }
             ]
-        };
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      })
+    });
 
-        let currentWordList = vocabularyBooks.coreVocab3a;
-        let currentBookKey = 'coreVocab3a';
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
 
-        // === 进度记录 ===
-        let learnedWords = {};
-        let progressStorage = {};
+    const content = data.choices[0].message.content;
+    // Extract JSON array from response
+    const match = content.match(/\[[\s\S]*\]/);
+    if (match) {
+      extractedWords = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse word list from AI response');
+    }
+  } catch (e) {
+    console.error('Extraction failed:', e);
+    document.getElementById('panel-extracting').classList.add('hidden');
+    const errDiv = document.createElement('div');
+    errDiv.className = 'error-box';
+    errDiv.innerHTML = `<strong>Extraction failed:</strong> ${e.message}<br><br>
+      <button class="btn btn-sec" onclick="resetWorkflow()">Try Again</button>
+      &nbsp; or &nbsp;
+      <button class="btn btn-sec" onclick="extractedWords=generateDemoWords();showReviewPanel();">Use Demo Words</button>`;
+    document.getElementById('workflowView').insertBefore(errDiv, document.getElementById('panel-extracting'));
+  }
 
-        // === 音频缓存 ===
-        let audioCache = {};
-        let isPlayingAudio = false;
+  if (extractedWords.length > 0) {
+    showReviewPanel();
+  }
+}
 
-        function loadProgress() {
-            learnedWords = progressStorage;
-        }
+function generateDemoWords() {
+  return [
+    {en:'algorithm',zh:'算法',diff:4},{en:'hypothesis',zh:'假设',diff:3},
+    {en:'infrastructure',zh:'基础设施',diff:3},{en:'sustainable',zh:'可持续的',diff:2},
+    {en:'paradigm',zh:'范式',diff:5},{en:'empirical',zh:'实证的',diff:4},
+    {en:'correlation',zh:'相关性',diff:3},{en:'synthesis',zh:'综合',diff:3},
+    {en:'abstract',zh:'抽象的',diff:2},{en:'implement',zh:'实施',diff:2},
+    {en:'preliminary',zh:'初步的',diff:3},{en:'variable',zh:'变量',diff:2},
+    {en:'consequently',zh:'因此',diff:2},{en:'predominant',zh:'主导的',diff:4},
+    {en:'ambiguous',zh:'模糊的',diff:3},{en:'substantial',zh:'大量的',diff:3},
+    {en:'contradict',zh:'矛盾',diff:3},{en:'analogy',zh:'类比',diff:3},
+  ];
+}
 
-        function saveProgress() {
-            progressStorage = learnedWords;
-            console.log('已学习单词已保存到内存');
-        }
+function showReviewPanel() {
+  currentStep = 3;
+  updateSteps();
 
-        // === 游戏状态 ===
-        let currentIndex = 0;
-        let currentWordObj = null;
-        let inputIndex = 0;
-        let correctCount = 0;
-        let totalKeystrokes = 0;
-        let combo = 0;
-        let maxCombo = 0;
+  document.getElementById('panel-extracting').classList.add('hidden');
+  document.getElementById('panel-review').classList.remove('hidden');
 
-        // DOM 元素
-        const meaningEl = document.getElementById('meaning-display');
-        const wordEl = document.getElementById('word-display');
-        const containerEl = document.getElementById('game-container');
-        const progressEl = document.getElementById('progress');
-        const accuracyEl = document.getElementById('accuracy');
-        const comboEl = document.getElementById('combo');
-        const finishScreenEl = document.getElementById('finish-screen');
-        const soundBtn = document.getElementById('sound-btn');
+  const grid = document.getElementById('wordGrid');
+  grid.innerHTML = '';
+  extractedWords.forEach((w, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip selected';
+    chip.dataset.index = i;
+    chip.innerHTML = `<div><span class="ch">${w.en}</span><br><span class="en">${w.zh}</span></div>`;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      chip.classList.toggle('removed');
+      updateWordCount();
+    };
+    grid.appendChild(chip);
+  });
+  updateWordCount();
+}
 
-        // 初始化
-        function init() {
-            loadProgress();
-            currentIndex = 0;
-            correctCount = 0;
-            totalKeystrokes = 0;
-            combo = 0;
-            maxCombo = 0;
-            containerEl.style.display = 'block';
-            finishScreenEl.classList.remove('show');
-            updateProgressDisplay();
-            loadWord(0);
-            document.addEventListener('keydown', handleInput);
-        }
+function updateWordCount() {
+  const count = document.querySelectorAll('#wordGrid .word-chip.selected').length;
+  document.getElementById('selectedCount').textContent = count;
+}
 
-        // 加载单词
-        function loadWord(index) {
-            if (index >= currentWordList.length) {
-                finishGame();
-                return;
-            }
+// ===== START PRACTICE =====
+function startPractice() {
+  const selected = [...document.querySelectorAll('#wordGrid .word-chip.selected')]
+    .map(el => extractedWords[parseInt(el.dataset.index)]);
+  if (selected.length === 0) { alert('Please select at least one word'); return; }
 
-            currentIndex = index;
-            currentWordObj = currentWordList[index];
-            inputIndex = 0;
+  // Shuffle
+  practiceWords = selected.sort(() => Math.random() - 0.5);
 
-            meaningEl.textContent = currentWordObj.zh;
-            updateStats();
+  currentStep = 4;
+  updateSteps();
 
-            wordEl.innerHTML = '';
-            const letters = currentWordObj.en.split('');
-            letters.forEach((char, i) => {
-                const span = document.createElement('span');
-                span.className = 'char';
-                span.dataset.char = char === ' ' ? ' ' : char.toLowerCase();
-                span.textContent = char === ' ' ? '' : char;
-                if (i === 0) span.classList.add('active');
-                wordEl.appendChild(span);
-            });
+  document.getElementById('panel-review').classList.add('hidden');
+  document.getElementById('panel-practice').classList.remove('hidden');
+  document.getElementById('panel-complete').classList.add('hidden');
 
-            // 自动播放发音
-            setTimeout(() => {
-                speakWord(true);
-            }, 200);
-        }
+  // Init practice
+  wordIndex = 0; correctCount = 0; totalTyped = 0; startTime = Date.now();
+  document.getElementById('typingInput').value = '';
+  document.getElementById('typingInput').focus();
+  document.getElementById('totalWords').textContent = practiceWords.length;
+  document.getElementById('currentWordNum').textContent = '1';
+  document.getElementById('accuracy').textContent = '100%';
+  document.getElementById('wpm').textContent = '0';
+  document.getElementById('feedback').textContent = '';
 
-        // 处理键盘输入
-        function handleInput(e) {
-            if (e.ctrlKey || e.altKey || e.metaKey) return;
-            if (!currentWordObj) return;
+  showWord();
+  document.getElementById('typingInput').oninput = checkTyping;
+}
 
-            const key = e.key.toLowerCase();
+function showWord() {
+  if (wordIndex >= practiceWords.length) {
+    completePractice();
+    return;
+  }
+  currentWord = practiceWords[wordIndex].en;
+  document.getElementById('display').textContent = currentWord;
+  document.getElementById('currentWordNum').textContent = wordIndex + 1;
+  document.getElementById('typingInput').value = '';
+  document.getElementById('typingInput').classList.remove('wrong', 'correct-anim');
+}
 
-            if (key === ' ') {
-                e.preventDefault();
-                
-                const charSpans = wordEl.querySelectorAll('.char');
-                const targetChar = currentWordObj.en[inputIndex];
-                
-                if (targetChar === ' ') {
-                    totalKeystrokes++;
-                    correctCount++;
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-                    
-                    playKeystrokeSound(true);
-                    
-                    const currentSpan = charSpans[inputIndex];
-                    currentSpan.classList.remove('active');
-                    currentSpan.classList.add('correct');
-                    
-                    inputIndex++;
-                    if (inputIndex < currentWordObj.en.length) {
-                        charSpans[inputIndex].classList.add('active');
-                    } else {
-                        markWordAsLearned(currentWordObj.en);
-                        setTimeout(() => {
-                            loadWord(currentIndex + 1);
-                        }, 200);
-                    }
-                    updateStats();
-                }
-                return;
-            }
-            
-            if (key === 'enter') {
-                e.preventDefault();
-                combo = 0;
-                loadWord(currentIndex + 1);
-                return;
-            }
+function checkTyping(e) {
+  const val = e.target.value.trim();
+  if (val === currentWord) {
+    correctCount++;
+    totalTyped++;
+    e.target.classList.add('correct-anim');
+    e.target.classList.remove('wrong');
+    document.getElementById('feedback').innerHTML = `<span style="color:var(--green)">✓ ${currentWord}</span>`;
+    wordIndex++;
+    setTimeout(showWord, 400);
+  } else if (currentWord.startsWith(val)) {
+    // partially correct
+  } else if (val.length >= currentWord.length) {
+    totalTyped++;
+    e.target.classList.add('wrong');
+    document.getElementById('feedback').innerHTML = `<span style="color:var(--red)">✗ Correct: ${currentWord}</span>`;
+    wordIndex++;
+    setTimeout(showWord, 600);
+  }
+  updateStats();
+}
 
-            if (key === 'backspace' && inputIndex > 0) {
-                e.preventDefault();
-                inputIndex--;
-                const charSpans = wordEl.querySelectorAll('.char');
-                charSpans[inputIndex].classList.remove('correct', 'active');
-                charSpans[inputIndex].classList.add('active');
-                return;
-            }
+function updateStats() {
+  const acc = totalTyped > 0 ? Math.round(correctCount / totalTyped * 100) : 100;
+  const elapsed = (Date.now() - startTime) / 60000;
+  const wpm = elapsed > 0 ? Math.round(correctCount / elapsed) : 0;
+  document.getElementById('accuracy').textContent = acc + '%';
+  document.getElementById('wpm').textContent = wpm;
+}
 
-            if (!/^[a-z]$/.test(key)) return;
+function completePractice() {
+  document.getElementById('panel-practice').classList.add('hidden');
+  document.getElementById('panel-complete').classList.remove('hidden');
+  const acc = totalTyped > 0 ? Math.round(correctCount / totalTyped * 100) : 100;
+  const elapsed = (Date.now() - startTime) / 60000;
+  const wpm = elapsed > 0 ? Math.round(correctCount / elapsed) : 0;
+  document.getElementById('finalAccuracy').textContent = acc + '%';
+  document.getElementById('finalWPM').textContent = wpm;
+  document.getElementById('finalWords').textContent = practiceWords.length;
+}
 
-            const charSpans = wordEl.querySelectorAll('.char');
-            const targetChar = currentWordObj.en[inputIndex];
-            const targetCharLower = targetChar.toLowerCase();
+function resetWorkflow() {
+  currentStep = 1;
+  extractedWords = []; practiceWords = []; fileData = null;
+  updateSteps();
+  ['panel-upload'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+  ['panel-extracting','panel-review','panel-practice','panel-complete'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('wordGrid').innerHTML = '';
+  // Remove error boxes
+  document.querySelectorAll('.error-box').forEach(el => el.remove());
+}
 
-            totalKeystrokes++;
+// ===== STEPS UI =====
+function updateSteps() {
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById('step' + i);
+    step.classList.remove('active', 'done');
+    if (i < currentStep) step.classList.add('done');
+    if (i === currentStep) step.classList.add('active');
+  }
+  for (let i = 1; i <= 3; i++) {
+    const conn = document.getElementById('conn' + i);
+    conn.classList.toggle('done', i < currentStep);
+  }
+}
 
-            if (key === targetCharLower) {
-                correctCount++;
-                combo++;
-                if (combo > maxCombo) maxCombo = combo;
+// ===== API KEY / GRADE =====
+function saveKey() {
+  localStorage.setItem('vocab_ds_key', document.getElementById('apiKey').value);
+}
+function saveGrade() {
+  localStorage.setItem('vocab_grade', document.getElementById('gradeLevel').value);
+}
 
-                playKeystrokeSound(true);
+// Load saved
+(function() {
+  const key = localStorage.getItem('vocab_ds_key');
+  if (key) document.getElementById('apiKey').value = key;
+  const grade = localStorage.getItem('vocab_grade');
+  if (grade) document.getElementById('gradeLevel').value = grade;
+})();
 
-                const currentSpan = charSpans[inputIndex];
-                currentSpan.classList.remove('active');
-                currentSpan.classList.add('correct');
+// ===== DIRECT PRACTICE =====
+const DSE_VOCAB = {
+  dse3a: ['abandon','ability','abroad','absence','absolute','absorb','abstract','abundant','academic','accelerate','accept','access','accompany','accomplish','account','accurate','accuse','achieve','acknowledge','acquire','adapt','adequate','adjust','administration','admire','admit','adopt','advance','advantage','advertise','affair','affect','afford','aggressive','agriculture','allocate','alternative','amateur','ambition','analyse','ancestor','anniversary','annual','anticipate','anxiety','apparent','appeal','appetite','appliance','application'],
+  dse3b: ['appoint','appreciate','approach','appropriate','approve','arise','arrange','artificial','aspect','assemble','assess','assign','assist','associate','assume','atmosphere','attach','attain','attempt','attend','attitude','attract','audience','authority','available','average','avoid','aware','balance','barrier','behalf','behave','belong','benefit','blame','border','broadcast','budget','burden','campaign','capable','capacity','capture','career','category','celebrate','challenge','channel','chapter'],
+  dse4a: ['characteristic','charity','chemical','circumstance','civil','claim','classify','climate','collapse','colleague','colonial','command','comment','commerce','commit','communicate','community','companion','comparison','compensate','compete','complaint','complex','component','compose','comprehensive','concentrate','concept','concern','conclude','condition','conduct','conference','confidence','confirm','conflict','confront','congress','connection','conscious','consequence','conservative','consider','consistent','constant','constitution','construct','consult','consume'],
+  dse4b: ['contact','contemporary','content','contest','context','contract','contribute','controversy','convenience','convention','convey','convince','cooperate','core','corporate','correspond','council','counter','couple','courage','create','credit','crime','crisis','criterion','critical','crucial','cultivate','culture','curiosity','current','curriculum','damage','debate','decade','decline','decorate','defend','define','definitely','deliberate','deliver','democracy','demonstrate','depart','depend','deposit','depress','derive','describe'],
+};
 
-                inputIndex++;
-                if (inputIndex < currentWordObj.en.length) {
-                    charSpans[inputIndex].classList.add('active');
-                } else {
-                    markWordAsLearned(currentWordObj.en);
-                    setTimeout(() => {
-                        loadWord(currentIndex + 1);
-                    }, 200);
-                }
+function loadVocabSet() {
+  const set = document.getElementById('vocabSet').value;
+  if (set === 'custom') {
+    const custom = prompt('Paste your words (comma or newline separated):');
+    if (custom) dWords = custom.split(/[,\n]+/).map(w => w.trim()).filter(Boolean);
+  } else if (DSE_VOCAB[set]) {
+    dWords = [...DSE_VOCAB[set]].sort(() => Math.random() - 0.5);
+  }
+  dIndex = 0; dCorrect = 0; dTyped = 0;
+  document.getElementById('dTotal').textContent = dWords.length;
+  document.getElementById('dCurrent').textContent = dWords.length > 0 ? '1' : '0';
+  document.getElementById('dAccuracy').textContent = '100%';
+  document.getElementById('dWpm').textContent = '0';
+  document.getElementById('dFeedback').textContent = '';
+  dStart = Date.now();
+  if (dWords.length > 0) showDWord();
+  document.getElementById('dInput').oninput = checkDTyping;
+}
 
-            } else {
-                combo = 0;
-                playKeystrokeSound(false);
-                containerEl.classList.remove('shake');
-                void containerEl.offsetWidth;
-                containerEl.classList.add('shake');
-            }
+function showDWord() {
+  if (dIndex >= dWords.length) { dIndex = 0; dCorrect = 0; dTyped = 0; dStart = Date.now(); }
+  currentWord = dWords[dIndex];
+  document.getElementById('dDisplay').textContent = currentWord;
+  document.getElementById('dCurrent').textContent = dIndex + 1;
+  document.getElementById('dInput').value = '';
+  document.getElementById('dInput').classList.remove('wrong', 'correct-anim');
+}
 
-            updateStats();
-        }
-
-        function updateStats() {
-            progressEl.textContent = `${currentIndex + 1}/${currentWordList.length}`;
-            comboEl.textContent = combo;
-
-            if (totalKeystrokes > 0) {
-                const acc = Math.round((correctCount / totalKeystrokes) * 100);
-                accuracyEl.textContent = `${acc}%`;
-            }
-        }
-
-        function updateProgressDisplay() {
-            const bookKey = currentBookKey;
-            const learned = learnedWords[bookKey] ? Object.keys(learnedWords[bookKey]).length : 0;
-            const total = currentWordList.length;
-            const percentage = Math.round((learned / total) * 100);
-
-            document.getElementById('learned-count').textContent = learned;
-            document.getElementById('total-count').textContent = total;
-            document.getElementById('progress-fill').style.width = percentage + '%';
-        }
-
-        function markWordAsLearned(word) {
-            if (!learnedWords[currentBookKey]) {
-                learnedWords[currentBookKey] = {};
-            }
-            learnedWords[currentBookKey][word] = true;
-            saveProgress();
-            updateProgressDisplay();
-        }
-
-        function resetProgress() {
-            if (confirm('确定要重置所有词汇书的进度吗？')) {
-                learnedWords = {};
-                progressStorage = {};
-                location.reload();
-            }
-        }
-
-        document.getElementById('vocab-book').addEventListener('change', (e) => {
-            const selectedBook = e.target.value;
-            currentBookKey = selectedBook;
-            currentWordList = vocabularyBooks[selectedBook];
-            
-            currentIndex = 0;
-            correctCount = 0;
-            totalKeystrokes = 0;
-            combo = 0;
-            maxCombo = 0;
-            
-            containerEl.style.display = 'block';
-            finishScreenEl.classList.remove('show');
-            updateProgressDisplay();
-            loadWord(0);
-        });
-
-        function finishGame() {
-            document.removeEventListener('keydown', handleInput);
-            containerEl.style.display = 'none';
-            finishScreenEl.classList.add('show');
-
-            document.getElementById('total-words').textContent = currentWordList.length;
-            const finalAcc = totalKeystrokes > 0 ? Math.round((correctCount / totalKeystrokes) * 100) : 100;
-            document.getElementById('final-accuracy').textContent = `${finalAcc}%`;
-            document.getElementById('max-combo').textContent = maxCombo;
-            
-            const learned = learnedWords[currentBookKey] ? Object.keys(learnedWords[currentBookKey]).length : 0;
-            document.getElementById('progress-saved').textContent = `${learned}/${currentWordList.length}`;
-        }
-
-        // 高质量语音合成 - 使用 Free TTS (ResponsiveVoice 备选)
-        async function speakWord(isAutoPlay = false) {
-            if (!currentWordObj || isPlayingAudio) return;
-            
-            const word = currentWordObj.en;
-            
-            // 先尝试使用 ResponsiveVoice (无需 API Key)
-            if (typeof responsiveVoice !== 'undefined') {
-                isPlayingAudio = true;
-                soundBtn.disabled = true;
-                responsiveVoice.speak(word, "UK English Female", {
-                    onend: () => {
-                        isPlayingAudio = false;
-                        soundBtn.disabled = false;
-                    }
-                });
-            } else {
-                // 备选方案：使用浏览器原生 Web Speech API (改进版)
-                try {
-                    isPlayingAudio = true;
-                    soundBtn.disabled = true;
-                    
-                    const utterance = new SpeechSynthesisUtterance(word);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 0.8;
-                    utterance.pitch = 1.0;
-                    utterance.volume = 1.0;
-                    
-                    utterance.onend = () => {
-                        isPlayingAudio = false;
-                        soundBtn.disabled = false;
-                    };
-                    
-                    utterance.onerror = () => {
-                        isPlayingAudio = false;
-                        soundBtn.disabled = false;
-                    };
-                    
-                    window.speechSynthesis.cancel();
-                    window.speechSynthesis.speak(utterance);
-                } catch (error) {
-                    console.warn('语音播放失败:', error);
-                    isPlayingAudio = false;
-                    soundBtn.disabled = false;
-                }
-            }
-        }
-
-        // 生成击键音效
-        function playKeystrokeSound(isCorrect = true) {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gain = audioContext.createGain();
-                
-                oscillator.connect(gain);
-                gain.connect(audioContext.destination);
-                
-                if (isCorrect) {
-                    oscillator.frequency.value = 800;
-                    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.1);
-                } else {
-                    oscillator.frequency.value = 300;
-                    gain.gain.setValueAtTime(0.2, audioContext.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.2);
-                }
-            } catch (error) {
-                console.warn('音效播放失败:', error);
-            }
-        }
-
-        soundBtn.addEventListener('click', () => {
-            speakWord(false);
-        });
-
-        init();
-    </script>
-
-    <!-- 引入 ResponsiveVoice 库 (免费、高质量发音) -->
-    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+function checkDTyping(e) {
+  const val = e.target.value.trim();
+  if (val === currentWord) { dCorrect++; dTyped++; e.target.classList.add('correct-anim'); dIndex++; setTimeout(showDWord, 400); }
+  else if (val.length >= currentWord.length) { dTyped++; e.target.classList.add('wrong'); dIndex++; setTimeout(showDWord, 600); }
+  const acc = dTyped > 0 ? Math.round(dCorrect / dTyped * 100) : 100;
+  const elapsed = (Date.now() - dStart) / 60000;
+  const wpm = elapsed > 0 ? Math.round(dCorrect / elapsed) : 0;
+  document.getElementById('dAccuracy').textContent = acc + '%';
+  document.getElementById('dWpm').textContent = wpm;
+}
+</script>
 </body>
 </html>
